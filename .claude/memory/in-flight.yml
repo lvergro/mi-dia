@@ -1,0 +1,3 @@
+# in-flight.yml — Feature pipeline state
+# Format: LINEAR_ID: { branch, phase, waves }
+# Empty = no feature in progress

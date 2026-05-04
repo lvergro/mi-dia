@@ -1,0 +1,72 @@
+# .claude/stack.yml — Stack Profile
+
+name: expo-supabase-monorepo
+
+runtime:
+  exec_prefix: ""
+  note: "pnpm monorepo con Turborepo. Expo para mobile. Supabase local vía Docker Compose."
+
+commands:
+  install: "pnpm install"
+  dev: "pnpm dev"
+  dev_mobile: "pnpm --filter mobile start"
+  test: "pnpm test"
+  test_single: "pnpm --filter {package} test -- {file}"
+  lint: "pnpm lint"
+  type_check: "pnpm type-check"
+  build: "pnpm build"
+  validate: "pnpm type-check && pnpm test"
+  db_start: "docker compose up -d"
+  db_stop: "docker compose down"
+  db_migrate: "npx supabase db push --local"
+  db_types: "npx supabase gen types typescript --local > packages/database/src/types.ts"
+  db_reset: "docker compose down -v && docker compose up -d"
+  studio_url: "http://localhost:54323"
+  supabase_url: "http://localhost:54321"
+
+paths:
+  source: "apps/mobile/app/"
+  packages: "packages/"
+  tests: "**/__tests__/"
+  config: "package.json"
+  components: "apps/mobile/components/"
+  hooks: "apps/mobile/hooks/"
+  migrations: "supabase/migrations/"
+  core: "packages/core/src/"
+  database: "packages/database/src/"
+  validators: "packages/validators/src/"
+  types: "packages/types/src/"
+
+conventions:
+  test_file_pattern: "{name}.test.ts"
+  screen_pattern: "apps/mobile/app/(group)/screen.tsx"
+  component_pattern: "apps/mobile/components/{domain}/{Component}.tsx"
+  hook_pattern: "apps/mobile/hooks/use{Name}.ts"
+  core_pattern: "packages/core/src/{domain}.ts"
+  db_query_pattern: "packages/database/src/{domain}.ts"
+
+framework:
+  name: "Expo SDK 52 + Expo Router v4"
+  mobile: "React Native (Expo) — Android MVP"
+  backend: "Supabase (PostgreSQL 15 + Auth + RLS)"
+  auth: "Supabase Auth (GoTrue) — JWT"
+  styling: "NativeWind (Tailwind para React Native)"
+  state: "TanStack Query + Zustand"
+  validation: "Zod"
+  language: "TypeScript (strict)"
+  monorepo: "pnpm workspaces + Turborepo"
+
+schema:
+  source: migrations
+  paths:
+    - supabase/migrations/*.sql
+
+database:
+  type: postgresql
+  schema_source: "supabase/migrations/"
+  mcp: false
+  read_only: false
+  notes: >
+    PostgreSQL 15 vía Supabase local (Docker Compose).
+    RLS habilitado en todas las tablas. Zona horaria: UTC en BD, local en UI.
+    Supabase Studio disponible en http://localhost:54323.

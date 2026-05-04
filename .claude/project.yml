@@ -1,0 +1,95 @@
+# .claude/project.yml — Project Identity
+
+name: Mi Día
+description: >
+  App móvil de checklist diario de medicamentos, procedimientos, autocuidado
+  y notas personales. Permite al usuario registrar qué tomó, a qué hora,
+  con qué estado (hecho/saltado/no recuerdo), y llevar una bitácora diaria.
+  MVP orientado a Android con Expo + Supabase.
+
+domain:
+  language: es
+  entities:
+    - medication        # Medicamento con dosis e indicaciones
+    - routine           # Configuración de tarea diaria recurrente
+    - daily_item        # Ítem generado para el día: instancia de una rutina
+    - daily_note        # Nota personal libre asociada a un día
+    - user              # Usuario autenticado (Supabase Auth)
+
+tenant:
+  enabled: false        # Single-tenant: cada usuario ve solo sus datos (RLS)
+
+invariants:
+  - name: Sin secretos hardcodeados
+    rule: >
+      Variables de entorno para toda credencial (SUPABASE_URL, SUPABASE_ANON_KEY).
+      Nunca en código fuente ni en commits.
+    severity: critical
+
+  - name: RLS obligatorio
+    rule: >
+      Toda tabla expuesta por PostgREST debe tener Row Level Security habilitado.
+      Un usuario solo ve, crea, modifica y elimina sus propios registros.
+      Ninguna query puede devolver datos de otro usuario.
+    severity: critical
+
+  - name: Sin recomendaciones médicas
+    rule: >
+      El sistema nunca debe sugerir repetir una dosis, modificar una dosis
+      ni hacer cualquier recomendación clínica. Solo registra y muestra.
+    severity: critical
+
+  - name: Manejo seguro de "no_sure"
+    rule: >
+      Cuando el usuario marca un ítem como "no_sure" (no recuerdo),
+      el sistema debe mostrar el mensaje:
+      "No hay confirmación de toma. Revisa tu pastillero o consulta tus
+      indicaciones médicas antes de repetir una dosis."
+      Nunca sugerir repetir la dosis automáticamente.
+    severity: critical
+
+  - name: Timestamps en UTC
+    rule: >
+      Todos los timestamps se almacenan en UTC (timestamptz).
+      La conversión a hora local ocurre solo en la capa de presentación.
+    severity: high
+
+  - name: completed_at obligatorio al marcar "done"
+    rule: >
+      Al marcar un daily_item como "done", el campo completed_at DEBE
+      registrarse con el timestamp exacto. Es el dato central del producto.
+    severity: high
+
+critical_flows:
+  - name: Checklist diario
+    description: >
+      El sistema genera daily_items para el día actual a partir de las rutinas
+      activas del usuario. Si ya existen daily_items para ese día, no duplica.
+      El usuario los ve agrupados por bloque: mañana, tarde, noche.
+    tables: [routines, daily_items]
+    type: generation
+    core_function: generateDailyChecklist()
+
+  - name: Cambio de estado de ítem
+    description: >
+      El usuario marca un daily_item como: pending → done | skipped | not_sure.
+      Si es "done": registrar completed_at = now().
+      Si es "not_sure": mostrar advertencia de seguridad médica.
+      No se puede deshacer "done" sin confirmación explícita.
+    tables: [daily_items]
+    type: state_machine
+
+  - name: Registro de notas
+    description: >
+      El usuario escribe una nota libre asociada al día actual.
+      Se registra content + date + created_at. Sin clasificación ni mood en MVP.
+    tables: [daily_notes]
+    type: crud
+
+gate_protected_areas:
+  - pattern: "supabase/migrations/"
+    reason: Cambios de schema requieren revisión de RLS y consistencia de datos
+  - pattern: "packages/core/"
+    reason: Lógica de negocio central — cambios afectan toda la app
+  - pattern: "packages/database/"
+    reason: Único punto de acceso a Supabase — errores aquí afectan todo
