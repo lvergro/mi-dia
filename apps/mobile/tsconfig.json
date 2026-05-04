@@ -2,6 +2,7 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "types": ["node"],
     "paths": {
       "@mi-dia/types": ["../../packages/types/src/index.ts"],
       "@mi-dia/validators": ["../../packages/validators/src/index.ts"],
@@ -9,5 +10,5 @@
       "@mi-dia/database": ["../../packages/database/src/index.ts"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
 }

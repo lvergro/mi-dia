@@ -1,10 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env["SUPABASE_URL"];
-const supabaseAnonKey = process.env["SUPABASE_ANON_KEY"];
+// Expo uses EXPO_PUBLIC_ prefix; Node scripts use SUPABASE_ prefix
+const supabaseUrl =
+  (typeof process !== "undefined" && process.env["EXPO_PUBLIC_SUPABASE_URL"]) ||
+  (typeof process !== "undefined" && process.env["SUPABASE_URL"]) ||
+  "";
+
+const supabaseAnonKey =
+  (typeof process !== "undefined" && process.env["EXPO_PUBLIC_SUPABASE_ANON_KEY"]) ||
+  (typeof process !== "undefined" && process.env["SUPABASE_ANON_KEY"]) ||
+  "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("SUPABASE_URL and SUPABASE_ANON_KEY are required");
+  throw new Error(
+    "Missing Supabase credentials. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in .env.local"
+  );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+  },
+});
