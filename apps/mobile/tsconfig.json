@@ -1,0 +1,13 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@mi-dia/types": ["../../packages/types/src/index.ts"],
+      "@mi-dia/validators": ["../../packages/validators/src/index.ts"],
+      "@mi-dia/core": ["../../packages/core/src/index.ts"],
+      "@mi-dia/database": ["../../packages/database/src/index.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"]
+}

@@ -31,3 +31,5 @@ supabase/config.toml
 
 # Claude Code
 .claude/settings.local.json
+node_modules
+dist
