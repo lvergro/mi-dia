@@ -9,8 +9,13 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: postgres
+      # Passed to current_setting('app.pg_password') in init SQL for role passwords
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+      PGOPTIONS: "-c app.pg_password=${POSTGRES_PASSWORD}"
     volumes:
       - db-data:/var/lib/postgresql/data
+      # init/ runs before migrations/ (alphabetical order in entrypoint)
+      - ./supabase/init:/docker-entrypoint-initdb.d/init:ro
       - ./supabase/migrations:/docker-entrypoint-initdb.d/migrations:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
