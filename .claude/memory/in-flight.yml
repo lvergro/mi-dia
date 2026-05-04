@@ -1,3 +1,7 @@
 # in-flight.yml — Feature pipeline state
 # Format: LINEAR_ID: { branch, phase, waves }
 # Empty = no feature in progress
+
+# LUI-54 completado — PR: https://github.com/lvergro/mi-dia/pull/1
+
+# LUI-55 completado — PR: https://github.com/lvergro/mi-dia/pull/2

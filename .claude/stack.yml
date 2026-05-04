@@ -4,7 +4,7 @@ name: expo-supabase-monorepo
 
 runtime:
   exec_prefix: ""
-  note: "pnpm monorepo con Turborepo. Expo para mobile. Supabase local vía Docker Compose."
+  note: "pnpm monorepo con Turborepo. Expo para mobile. Supabase Cloud como BaaS."
 
 commands:
   install: "pnpm install"
@@ -16,13 +16,8 @@ commands:
   type_check: "pnpm type-check"
   build: "pnpm build"
   validate: "pnpm type-check && pnpm test"
-  db_start: "docker compose up -d"
-  db_stop: "docker compose down"
-  db_migrate: "npx supabase db push --local"
-  db_types: "npx supabase gen types typescript --local > packages/database/src/types.ts"
-  db_reset: "docker compose down -v && docker compose up -d"
-  studio_url: "http://localhost:54323"
-  supabase_url: "http://localhost:54321"
+  db_migrate: "npx supabase db push"
+  db_types: "npx supabase gen types typescript --project-id {project_id} > packages/database/src/types.ts"
 
 paths:
   source: "apps/mobile/app/"
@@ -67,6 +62,6 @@ database:
   mcp: false
   read_only: false
   notes: >
-    PostgreSQL 15 vía Supabase local (Docker Compose).
+    PostgreSQL 15 vía Supabase Cloud (supabase.com).
     RLS habilitado en todas las tablas. Zona horaria: UTC en BD, local en UI.
-    Supabase Studio disponible en http://localhost:54323.
+    Migraciones aplicadas con: npx supabase db push.

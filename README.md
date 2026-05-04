@@ -64,32 +64,27 @@ Supabase (PostgreSQL + Auth + RLS)
 
 - Node.js ≥ 20
 - pnpm ≥ 9 (`npm install -g pnpm`)
-- Docker (para Supabase local)
-- Expo Go en el dispositivo Android (para desarrollo)
+- Cuenta en [supabase.com](https://supabase.com) (plan gratuito)
+- Expo Go en el dispositivo Android
 
 ---
 
-## Setup local
+## Setup
 
 ```bash
 # 1. Instalar dependencias
 pnpm install
 
-# 2. Levantar Supabase local
-docker compose up -d
-
-# 3. Aplicar migraciones
-npx supabase db push --local
-
-# 4. Copiar variables de entorno
+# 2. Crear proyecto en supabase.com y copiar las credenciales
 cp .env.example .env.local
-# Editar .env.local con SUPABASE_URL y SUPABASE_ANON_KEY
+# Editar .env.local con EXPO_PUBLIC_SUPABASE_URL y EXPO_PUBLIC_SUPABASE_ANON_KEY
 
-# 5. Iniciar la app
+# 3. Aplicar migraciones al proyecto Supabase
+npx supabase db push
+
+# 4. Iniciar la app
 pnpm --filter mobile start
 ```
-
-Supabase Studio disponible en http://localhost:54323
 
 ---
 
@@ -102,8 +97,7 @@ pnpm type-check       # Verificar tipos en todo el monorepo
 pnpm test             # Ejecutar tests
 pnpm lint             # Linting
 
-docker compose up -d  # Levantar Supabase local
-docker compose down   # Detener Supabase local
+npx supabase db push  # Aplicar migraciones a Supabase Cloud
 ```
 
 ---
