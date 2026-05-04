@@ -1,6 +1,7 @@
 # Schema — Mi Día
 Last synced: 2026-05-04
 Source: supabase/migrations/*.sql
+Migration: supabase/migrations/20260504000000_initial_schema.sql
 
 ## Tables
 
@@ -53,6 +54,13 @@ daily_notes:
   timestamps: true (created_at, updated_at — no deleted_at en MVP)
   indexes: [(user_id, date)]
   rls: user_id = auth.uid()
+
+## Constraints
+- daily_items: CHECK `(status = 'done' AND completed_at IS NOT NULL) OR (status <> 'done' AND completed_at IS NULL)`
+- routines.type: CHECK IN ('medication', 'procedure', 'self_care')
+- daily_items.type: CHECK IN ('medication', 'procedure', 'self_care')
+- daily_items.status: CHECK IN ('pending', 'done', 'skipped', 'not_sure')
+- routines.time_block: CHECK IN ('morning', 'afternoon', 'night')
 
 ## Notes
 - Todos los timestamps en UTC (timestamptz).
