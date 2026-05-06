@@ -14,24 +14,36 @@ export interface GroupedItems {
   night: DailyItem[];
 }
 
-export function generateDailyChecklist(routines: Routine[], date: string): Omit<DailyItem, "id" | "created_at">[] {
+export function generateDailyChecklist(
+  routines: Routine[],
+  date: string,
+  existingItems: DailyItem[] = [],
+): Omit<DailyItem, "id" | "created_at">[] {
+  const existingRoutineIds = new Set(
+    existingItems.filter((i) => i.routine_id !== null).map((i) => i.routine_id as string),
+  );
+
   return routines
-    .filter((r) => r.active)
+    .filter((r) => r.active && !existingRoutineIds.has(r.id))
     .map((r) => ({
       user_id: r.user_id,
       routine_id: r.id,
       date,
+      type: r.type,
+      title: r.title,
+      scheduled_time: r.scheduled_time,
+      time_block: r.time_block,
       status: "pending" as DailyItemStatus,
       completed_at: null,
+      notes: null,
     }));
 }
 
-export function groupItemsByTimeBlock(items: Array<DailyItem & { time_block?: TimeBlock }>): GroupedItems {
+export function groupItemsByTimeBlock(items: DailyItem[]): GroupedItems {
   const groups: GroupedItems = { morning: [], afternoon: [], night: [] };
   for (const item of items) {
-    const block = item.time_block;
-    if (block !== undefined) {
-      groups[block].push(item);
+    if (item.time_block !== null) {
+      groups[item.time_block as TimeBlock].push(item);
     }
   }
   return groups;

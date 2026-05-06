@@ -46,6 +46,7 @@ export interface DailyItem {
   title: string;
   type: RoutineType;
   scheduled_time: string | null;
+  time_block: TimeBlock | null;
   status: DailyItemStatus;
   completed_at: string | null;
   notes: string | null;
