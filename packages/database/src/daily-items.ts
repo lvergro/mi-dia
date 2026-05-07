@@ -23,6 +23,24 @@ export async function upsertDailyItems(items: DailyItemInsert[]): Promise<DailyI
   return data as DailyItem[];
 }
 
+export async function getDailyItemsForDateRange(
+  userId: string,
+  fromDate: string,
+  toDate: string
+): Promise<DailyItem[]> {
+  const { data, error } = await supabase
+    .from("daily_items")
+    .select("*")
+    .eq("user_id", userId)
+    .gte("date", fromDate)
+    .lte("date", toDate)
+    .order("date", { ascending: false })
+    .order("time_block", { ascending: true });
+
+  if (error) throw error;
+  return data as DailyItem[];
+}
+
 export async function updateDailyItemStatus(
   id: string,
   status: DailyItemStatus,

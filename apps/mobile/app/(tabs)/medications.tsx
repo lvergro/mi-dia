@@ -10,12 +10,14 @@ import {
   useUpdateMedication,
   useDeleteMedication,
 } from "../../hooks/useMedicationMutations";
+import { useCreateRoutine } from "../../hooks/useRoutines";
 
 export default function MedicationsScreen() {
   const { data: medications, isLoading, isError } = useMedications();
   const createMutation = useCreateMedication();
   const updateMutation = useUpdateMedication();
   const deleteMutation = useDeleteMedication();
+  const createRoutine = useCreateRoutine();
 
   const [formVisible, setFormVisible] = useState(false);
   const [editing, setEditing] = useState<Medication | null>(null);
@@ -44,7 +46,20 @@ export default function MedicationsScreen() {
         { onSuccess: () => setFormVisible(false) },
       );
     } else {
-      createMutation.mutate(payload, { onSuccess: () => setFormVisible(false) });
+      createMutation.mutate(payload, {
+        onSuccess: (medication) => {
+          if (values.timeBlock) {
+            createRoutine.mutate({
+              medication_id: medication.id,
+              type: "medication",
+              title: medication.name,
+              time_block: values.timeBlock,
+              scheduled_time: values.scheduledTime ? `${values.scheduledTime}:00` : null,
+            });
+          }
+          setFormVisible(false);
+        },
+      });
     }
   }
 
