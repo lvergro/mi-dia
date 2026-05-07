@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { groupItemsByTimeBlock, calculateAdherence } from "@mi-dia/core";
 import type { DailyItem } from "@mi-dia/types";
 import { useDailyChecklist } from "../../hooks/useDailyChecklist";
@@ -18,11 +19,12 @@ function today(): string {
 }
 
 export default function MiDiaScreen() {
+  const router = useRouter();
   const { session } = useSessionStore();
   const userId = session?.user.id ?? "";
   const date = today();
 
-  const { data: items = [], isLoading, error } = useDailyChecklist(userId, date);
+  const { data: items = [], isLoading, error, refetch, isFetching } = useDailyChecklist(userId, date);
   const [selectedItem, setSelectedItem] = useState<DailyItem | null>(null);
 
   const grouped = groupItemsByTimeBlock(items);
@@ -50,9 +52,35 @@ export default function MiDiaScreen() {
     );
   }
 
+  if (items.length === 0) {
+    return (
+      <View className="flex-1 bg-surface items-center justify-center px-8">
+        <Text className="text-5xl mb-4">☀️</Text>
+        <Text className="text-xl font-bold text-gray-900 text-center mb-2">
+          Aún no tienes rutinas
+        </Text>
+        <Text className="text-sm text-muted text-center mb-8">
+          Agrega tus medicamentos y configura a qué hora tomarlos para que aparezcan aquí cada día.
+        </Text>
+        <Pressable
+          className="bg-primary rounded-2xl px-8 py-4"
+          onPress={() => router.navigate("/(tabs)/medications")}
+        >
+          <Text className="text-white font-semibold text-base">Ir a Medicamentos</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <>
-      <ScrollView className="flex-1 bg-surface" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        className="flex-1 bg-surface"
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
+        }
+      >
         {/* Header con fecha y badge de adherencia */}
         <View className="px-4 pt-6 pb-4 flex-row items-start justify-between">
           <View>
