@@ -18,7 +18,7 @@ export function generateDailyChecklist(
   routines: Routine[],
   date: string,
   existingItems: DailyItem[] = [],
-): Omit<DailyItem, "id" | "created_at">[] {
+): Omit<DailyItem, "id" | "created_at" | "updated_at">[] {
   const existingRoutineIds = new Set(
     existingItems.filter((i) => i.routine_id !== null).map((i) => i.routine_id as string),
   );
@@ -42,8 +42,9 @@ export function generateDailyChecklist(
 export function groupItemsByTimeBlock(items: DailyItem[]): GroupedItems {
   const groups: GroupedItems = { morning: [], afternoon: [], night: [] };
   for (const item of items) {
-    if (item.time_block !== null) {
-      groups[item.time_block as TimeBlock].push(item);
+    const block = item.time_block as TimeBlock | null;
+    if (block !== null) {
+      groups[block].push(item);
     }
   }
   return groups;

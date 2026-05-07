@@ -57,7 +57,7 @@ export function StatusPicker({ item, visible, onClose }: StatusPickerProps) {
               <Text className="text-sm text-gray-500 text-center mb-6">¿Cómo resultó?</Text>
 
               <Pressable
-                className="bg-green-500 rounded-xl py-4 mb-3 items-center"
+                className="bg-done rounded-xl py-4 mb-3 items-center"
                 onPress={() => handleOptionPress("done")}
                 disabled={isPending}
               >
@@ -81,7 +81,7 @@ export function StatusPicker({ item, visible, onClose }: StatusPickerProps) {
               </Pressable>
 
               <Pressable className="items-center py-2" onPress={reset}>
-                <Text className="text-gray-400">Cancelar</Text>
+                <Text className="text-muted">Cancelar</Text>
               </Pressable>
             </>
           )}
@@ -92,7 +92,7 @@ export function StatusPicker({ item, visible, onClose }: StatusPickerProps) {
               <Text className="text-sm text-gray-700 mb-6 leading-5">{NOT_SURE_WARNING}</Text>
 
               <Pressable
-                className="bg-amber-500 rounded-xl py-4 mb-3 items-center"
+                className="bg-not_sure rounded-xl py-4 mb-3 items-center"
                 onPress={confirmNotSure}
                 disabled={isPending}
               >
@@ -100,7 +100,7 @@ export function StatusPicker({ item, visible, onClose }: StatusPickerProps) {
               </Pressable>
 
               <Pressable className="items-center py-2" onPress={() => setStep("options")}>
-                <Text className="text-gray-400">Volver</Text>
+                <Text className="text-muted">Volver</Text>
               </Pressable>
             </>
           )}
@@ -108,7 +108,7 @@ export function StatusPicker({ item, visible, onClose }: StatusPickerProps) {
           {step === "undo_done_confirm" && (
             <>
               <Text className="text-base font-semibold text-center mb-2">Cambiar estado</Text>
-              <Text className="text-sm text-gray-500 text-center mb-6">
+              <Text className="text-sm text-muted text-center mb-6">
                 Este ítem ya estaba marcado como hecho. ¿Seguro que quieres cambiar el estado?
               </Text>
 
@@ -129,7 +129,7 @@ export function StatusPicker({ item, visible, onClose }: StatusPickerProps) {
               </Pressable>
 
               <Pressable className="items-center py-2" onPress={reset}>
-                <Text className="text-gray-400">Cancelar</Text>
+                <Text className="text-muted">Cancelar</Text>
               </Pressable>
             </>
           )}
