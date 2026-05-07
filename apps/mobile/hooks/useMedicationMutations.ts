@@ -8,7 +8,7 @@ export function useCreateMedication() {
   const userId = useSessionStore((s) => s.session?.user.id);
 
   return useMutation({
-    mutationFn: (data: Omit<MedicationInsert, "user_id">) =>
+    mutationFn: (data: Omit<MedicationInsert, "user_id" | "active">) =>
       createMedication({ ...data, user_id: userId!, active: true }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["medications", userId] });
