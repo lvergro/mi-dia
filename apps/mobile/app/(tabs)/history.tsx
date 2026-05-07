@@ -4,6 +4,7 @@ import {
   FlatList,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   Text,
   View,
@@ -91,7 +92,7 @@ function DayDetailModal({ day, onClose }: { day: DayHistory; onClose: () => void
 }
 
 export default function HistoryScreen() {
-  const { data: history = [], isLoading, isError } = useHistory(30);
+  const { data: history = [], isLoading, isError, refetch, isFetching } = useHistory(30);
   const [selectedDay, setSelectedDay] = useState<DayHistory | null>(null);
 
   return (
@@ -115,6 +116,9 @@ export default function HistoryScreen() {
           data={history}
           keyExtractor={(item) => item.date}
           contentContainerStyle={{ padding: 16, paddingTop: 8 }}
+          refreshControl={
+            <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
+          }
           renderItem={({ item }) => (
             <Pressable
               className="bg-white rounded-2xl px-4 py-4 mb-3 border border-gray-100 flex-row items-center active:opacity-70"

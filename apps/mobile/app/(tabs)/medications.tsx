@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import type { Medication } from "@mi-dia/types";
 import { MedicationCard } from "../../components/medication/MedicationCard";
 import { MedicationForm, type MedicationFormValues } from "../../components/medication/MedicationForm";
@@ -13,7 +13,7 @@ import {
 import { useCreateRoutine } from "../../hooks/useRoutines";
 
 export default function MedicationsScreen() {
-  const { data: medications, isLoading, isError } = useMedications();
+  const { data: medications, isLoading, isError, refetch, isFetching } = useMedications();
   const createMutation = useCreateMedication();
   const updateMutation = useUpdateMedication();
   const deleteMutation = useDeleteMedication();
@@ -98,6 +98,9 @@ export default function MedicationsScreen() {
           data={medications}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16, paddingTop: 8 }}
+          refreshControl={
+            <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
+          }
           renderItem={({ item }) => (
             <MedicationCard
               medication={item}

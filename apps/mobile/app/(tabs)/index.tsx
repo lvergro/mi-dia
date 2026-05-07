@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { groupItemsByTimeBlock, calculateAdherence } from "@mi-dia/core";
 import type { DailyItem } from "@mi-dia/types";
@@ -24,7 +24,7 @@ export default function MiDiaScreen() {
   const userId = session?.user.id ?? "";
   const date = today();
 
-  const { data: items = [], isLoading, error } = useDailyChecklist(userId, date);
+  const { data: items = [], isLoading, error, refetch, isFetching } = useDailyChecklist(userId, date);
   const [selectedItem, setSelectedItem] = useState<DailyItem | null>(null);
 
   const grouped = groupItemsByTimeBlock(items);
@@ -74,7 +74,13 @@ export default function MiDiaScreen() {
 
   return (
     <>
-      <ScrollView className="flex-1 bg-surface" contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        className="flex-1 bg-surface"
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
+        }
+      >
         {/* Header con fecha y badge de adherencia */}
         <View className="px-4 pt-6 pb-4 flex-row items-start justify-between">
           <View>
