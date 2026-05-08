@@ -66,3 +66,23 @@ export interface DailyNote {
 }
 
 export type DailyNoteInsert = Omit<DailyNote, "id" | "created_at" | "updated_at">;
+
+export type ItemType = "medication" | "activity";
+export type RecurrenceType = "daily" | "specific_days";
+
+export interface Item {
+  id: string;
+  user_id: string;
+  type: ItemType;
+  name: string;
+  dose: string | null;
+  specific_time: string; // "HH:MM:SS" from Postgres time
+  recurrence_type: RecurrenceType;
+  recurrence_days: number[] | null; // 1=lun .. 7=dom
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ItemInsert = Omit<Item, "id" | "user_id" | "deleted_at" | "created_at" | "updated_at">;
+export type ItemUpdate = Partial<ItemInsert>;
