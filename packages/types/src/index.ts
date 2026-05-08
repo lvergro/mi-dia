@@ -86,3 +86,18 @@ export interface Item {
 
 export type ItemInsert = Omit<Item, "id" | "user_id" | "deleted_at" | "created_at" | "updated_at">;
 export type ItemUpdate = Partial<ItemInsert>;
+
+export type LogStatus = "done" | "omitted";
+
+export interface Log {
+  id: string;
+  user_id: string;
+  item_id: string;
+  date: string; // "YYYY-MM-DD"
+  status: LogStatus;
+  note: string | null;
+  completed_at: string;
+  created_at: string;
+}
+
+export type LogInsert = Omit<Log, "id" | "user_id" | "created_at">;
