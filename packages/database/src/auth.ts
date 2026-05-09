@@ -1,5 +1,5 @@
-import { Session, AuthChangeEvent } from "@supabase/supabase-js";
-import { supabase } from "./client";
+import { type Session, type AuthChangeEvent } from "@supabase/supabase-js";
+import { supabase } from "./client.js";
 
 export async function signIn(email: string, password: string): Promise<void> {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
