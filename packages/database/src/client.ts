@@ -1,4 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupportedStorage } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Metro inlines EXPO_PUBLIC_ vars with dot notation only (not bracket notation)
 const supabaseUrl =
@@ -19,6 +20,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
+    storage: AsyncStorage as unknown as SupportedStorage,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,

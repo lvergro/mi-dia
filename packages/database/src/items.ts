@@ -12,9 +12,11 @@ export async function getItems(): Promise<Item[]> {
 }
 
 export async function createItem(data: ItemInsert): Promise<Item> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
   const { data: created, error } = await supabase
     .from("items")
-    .insert(data)
+    .insert({ ...data, user_id: user.id })
     .select()
     .single();
   if (error) throw error;

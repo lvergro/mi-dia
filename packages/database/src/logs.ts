@@ -11,9 +11,11 @@ export async function getLogsForDate(date: string): Promise<Log[]> {
 }
 
 export async function createLog(data: LogInsert): Promise<Log> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
   const { data: created, error } = await supabase
     .from("logs")
-    .insert(data)
+    .insert({ ...data, user_id: user.id })
     .select()
     .single();
   if (error) throw error;

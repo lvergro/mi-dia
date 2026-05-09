@@ -10,9 +10,14 @@ export interface PushToken {
 }
 
 export async function upsertPushToken(expoToken: string): Promise<PushToken> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
   const { data, error } = await supabase
     .from("push_tokens")
-    .upsert({ expo_token: expoToken, platform: "android" }, { onConflict: "user_id" })
+    .upsert(
+      { user_id: user.id, expo_token: expoToken, platform: "android" },
+      { onConflict: "user_id" }
+    )
     .select()
     .single();
   if (error) throw error;
