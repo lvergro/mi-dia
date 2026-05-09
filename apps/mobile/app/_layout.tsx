@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { onAuthStateChange, getSession } from "@mi-dia/database";
 import { useSessionStore } from "../hooks/useSession";
 import { useRegisterPushToken } from "../hooks/useRegisterPushToken";
+import { setupNotificationHandler } from "../lib/notifications";
+
+setupNotificationHandler();
 
 const queryClient = new QueryClient({
   defaultOptions: {
