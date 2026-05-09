@@ -2,7 +2,7 @@ import "../global.css";
 import { useEffect } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { onAuthStateChange } from "@mi-dia/database";
+import { onAuthStateChange, getSession } from "@mi-dia/database";
 import { useSessionStore } from "../hooks/useSession";
 import { useRegisterPushToken } from "../hooks/useRegisterPushToken";
 import { setupNotificationHandler } from "../lib/notifications";
@@ -37,12 +37,22 @@ function AuthGuard() {
 
 export default function RootLayout() {
   useEffect(() => {
-    // onAuthStateChange fires INITIAL_SESSION on subscribe, so no
-    // separate getSession() call is needed. A parallel getSession()
-    // would race and overwrite a valid session with null.
     const listener = onAuthStateChange((_event, session) => {
       useSessionStore.getState().setSession(session);
     });
+    // Fallback: resolve loading state if INITIAL_SESSION is delayed.
+    // Only writes if the listener hasn't already resolved loading.
+    getSession()
+      .then((session) => {
+        if (useSessionStore.getState().loading) {
+          useSessionStore.getState().setSession(session);
+        }
+      })
+      .catch(() => {
+        if (useSessionStore.getState().loading) {
+          useSessionStore.getState().setSession(null);
+        }
+      });
     return () => listener.unsubscribe();
   }, []);
 

@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Alert } from "react-native";
 import { signIn, signUp, signOut } from "@mi-dia/database";
+import { useSessionStore } from "./useSession";
 
 interface AuthState {
   loading: boolean;
@@ -8,12 +10,11 @@ interface AuthState {
 
 function friendlyError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
-  console.error("[Auth error]", msg);
   if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials")) {
     return "Credenciales incorrectas. Verifica tu email y contraseña.";
   }
   if (msg.includes("Email not confirmed") || msg.includes("email_not_confirmed")) {
-    return "Debes confirmar tu email antes de ingresar. Revisa tu bandeja de entrada.";
+    return "Debes confirmar tu email. Revisa tu bandeja de entrada.";
   }
   if (msg.includes("User already registered") || msg.includes("already registered")) {
     return "Ya existe una cuenta con ese email. Intenta iniciar sesión.";
@@ -21,7 +22,7 @@ function friendlyError(err: unknown): string {
   if (msg.includes("Password should be")) {
     return "La contraseña debe tener al menos 6 caracteres.";
   }
-  return `Error: ${msg}`;
+  return msg;
 }
 
 export function useAuth() {
@@ -34,20 +35,33 @@ export function useAuth() {
   async function handleSignIn(email: string, password: string): Promise<void> {
     setState({ loading: true, error: null });
     try {
-      await signIn(email, password);
+      const session = await signIn(email, password);
+      useSessionStore.getState().setSession(session);
       setState({ loading: false, error: null });
     } catch (err) {
-      setState({ loading: false, error: friendlyError(err) });
+      const msg = friendlyError(err);
+      setState({ loading: false, error: msg });
+      Alert.alert("Error al ingresar", msg);
     }
   }
 
   async function handleSignUp(email: string, password: string): Promise<void> {
     setState({ loading: true, error: null });
     try {
-      await signUp(email, password);
+      const session = await signUp(email, password);
+      if (session) {
+        useSessionStore.getState().setSession(session);
+      } else {
+        Alert.alert(
+          "Confirma tu email",
+          "Te enviamos un link de confirmación. Revisa tu bandeja de entrada y luego ingresa."
+        );
+      }
       setState({ loading: false, error: null });
     } catch (err) {
-      setState({ loading: false, error: friendlyError(err) });
+      const msg = friendlyError(err);
+      setState({ loading: false, error: msg });
+      Alert.alert("Error al registrarse", msg);
     }
   }
 
@@ -55,6 +69,7 @@ export function useAuth() {
     setState({ loading: true, error: null });
     try {
       await signOut();
+      useSessionStore.getState().setSession(null);
       setState({ loading: false, error: null });
     } catch (err) {
       setState({ loading: false, error: friendlyError(err) });

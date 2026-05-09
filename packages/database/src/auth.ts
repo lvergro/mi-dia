@@ -1,14 +1,16 @@
 import { type Session, type AuthChangeEvent } from "@supabase/supabase-js";
 import { supabase } from "./client.js";
 
-export async function signIn(email: string, password: string): Promise<void> {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+export async function signIn(email: string, password: string): Promise<Session> {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  return data.session!;
 }
 
-export async function signUp(email: string, password: string): Promise<void> {
-  const { error } = await supabase.auth.signUp({ email, password });
+export async function signUp(email: string, password: string): Promise<Session | null> {
+  const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
+  return data.session;
 }
 
 export async function signOut(): Promise<void> {
