@@ -21,9 +21,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.midia.app"
+      "package": "com.midia.app",
+      "permissions": ["RECEIVE_BOOT_COMPLETED"]
     },
-    "plugins": ["expo-router"],
+    "plugins": ["expo-router", "expo-notifications"],
     "scheme": "mi-dia",
     "experiments": {
       "typedRoutes": true
