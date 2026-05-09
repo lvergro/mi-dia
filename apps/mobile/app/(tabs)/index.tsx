@@ -218,7 +218,13 @@ export default function MiDiaScreen() {
 
   if (totalItems === 0) {
     return (
-      <View className="flex-1 bg-surface items-center justify-center px-8">
+      <ScrollView
+        className="flex-1 bg-surface"
+        contentContainerStyle={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
+        }
+      >
         <Text className="text-5xl mb-4">☀️</Text>
         <Text className="text-xl font-bold text-gray-900 text-center mb-2">
           Tu día está vacío
@@ -232,7 +238,7 @@ export default function MiDiaScreen() {
         >
           <Text className="text-white font-semibold text-base">Ir a Medicamentos</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     );
   }
 

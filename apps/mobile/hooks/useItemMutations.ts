@@ -9,6 +9,7 @@ export function useCreateItem() {
     mutationFn: (data: ItemInsert) => createItem(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["items"] });
+      queryClient.invalidateQueries({ queryKey: ["checklist"] });
     },
   });
 }
@@ -21,6 +22,7 @@ export function useUpdateItem() {
       updateItem(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["items"] });
+      queryClient.invalidateQueries({ queryKey: ["checklist"] });
     },
   });
 }
@@ -32,6 +34,7 @@ export function useSoftDeleteItem() {
     mutationFn: (id: string) => softDeleteItem(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["items"] });
+      queryClient.invalidateQueries({ queryKey: ["checklist"] });
     },
   });
 }
