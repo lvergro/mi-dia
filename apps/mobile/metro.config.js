@@ -14,6 +14,12 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
+// Use package.json "exports" field with "react-native" condition
+// so workspace packages (database, core, types) serve src/ to Metro
+// instead of the stale dist/ build
+config.resolver.unstable_enablePackageExports = true;
+config.resolver.unstable_conditionNames = ["react-native", "browser", "require", "default"];
+
 // Resolve .js imports to .ts/.tsx sources (required for packages with node16 moduleResolution)
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
