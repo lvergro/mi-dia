@@ -2,7 +2,7 @@ import "../global.css";
 import { useEffect } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { supabase } from "@mi-dia/database";
+import { onAuthStateChange, getSession } from "@mi-dia/database";
 import { useSessionStore } from "../hooks/useSession";
 import { useRegisterPushToken } from "../hooks/useRegisterPushToken";
 
@@ -34,13 +34,13 @@ function AuthGuard() {
 
 export default function RootLayout() {
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const listener = onAuthStateChange((_event, session) => {
       useSessionStore.getState().setSession(session);
     });
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    getSession().then((session) => {
       useSessionStore.getState().setSession(session);
     });
-    return () => listener.subscription.unsubscribe();
+    return () => listener.unsubscribe();
   }, []);
 
   return (
