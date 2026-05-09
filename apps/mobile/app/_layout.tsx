@@ -4,6 +4,7 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "@mi-dia/database";
 import { useSessionStore } from "../hooks/useSession";
+import { useRegisterPushToken } from "../hooks/useRegisterPushToken";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,6 +16,8 @@ function AuthGuard() {
   const router = useRouter();
   const segments = useSegments();
   const { session, loading } = useSessionStore();
+
+  useRegisterPushToken();
 
   useEffect(() => {
     if (loading) return;

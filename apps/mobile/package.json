@@ -18,6 +18,8 @@
     "@supabase/supabase-js": "^2.47.3",
     "@tanstack/react-query": "^5.62.8",
     "expo": "~52.0.28",
+    "expo-device": "~7.1.0",
+    "expo-notifications": "~0.29.0",
     "expo-router": "~4.0.17",
     "expo-status-bar": "~2.0.1",
     "nativewind": "^4.1.23",
