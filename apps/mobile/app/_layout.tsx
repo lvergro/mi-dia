@@ -40,9 +40,13 @@ export default function RootLayout() {
     const listener = onAuthStateChange((_event, session) => {
       useSessionStore.getState().setSession(session);
     });
-    getSession().then((session) => {
-      useSessionStore.getState().setSession(session);
-    });
+    getSession()
+      .then((session) => {
+        useSessionStore.getState().setSession(session);
+      })
+      .catch(() => {
+        useSessionStore.getState().setSession(null);
+      });
     return () => listener.unsubscribe();
   }, []);
 

@@ -8,8 +8,12 @@ interface AuthState {
 
 function friendlyError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
+  console.error("[Auth error]", msg);
   if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials")) {
     return "Credenciales incorrectas. Verifica tu email y contraseña.";
+  }
+  if (msg.includes("Email not confirmed") || msg.includes("email_not_confirmed")) {
+    return "Debes confirmar tu email antes de ingresar. Revisa tu bandeja de entrada.";
   }
   if (msg.includes("User already registered") || msg.includes("already registered")) {
     return "Ya existe una cuenta con ese email. Intenta iniciar sesión.";
@@ -17,7 +21,7 @@ function friendlyError(err: unknown): string {
   if (msg.includes("Password should be")) {
     return "La contraseña debe tener al menos 6 caracteres.";
   }
-  return "Ocurrió un error. Intenta de nuevo.";
+  return `Error: ${msg}`;
 }
 
 export function useAuth() {

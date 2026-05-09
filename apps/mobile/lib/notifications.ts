@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
 function isNotificationsAvailable(): boolean {
   try {
@@ -7,6 +8,10 @@ function isNotificationsAvailable(): boolean {
   } catch {
     return false;
   }
+}
+
+function isExpoGo(): boolean {
+  return Constants.appOwnership === "expo";
 }
 
 export function setupNotificationHandler(): void {
@@ -23,8 +28,7 @@ export function setupNotificationHandler(): void {
 }
 
 export async function registerForPushNotificationsAsync(): Promise<string | null> {
-  if (!isNotificationsAvailable()) {
-    console.warn("expo-notifications not available in this environment");
+  if (!isNotificationsAvailable() || isExpoGo()) {
     return null;
   }
 
