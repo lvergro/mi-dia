@@ -6,3 +6,4 @@ export * from "./daily-notes.js";
 export * from "./items.js";
 export * from "./logs.js";
 export * from "./pushTokens.js";
+export * from "./history.js";
