@@ -1,28 +1,17 @@
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useState } from "react";
-import { supabase } from "@mi-dia/database";
+import { useAuth } from "../../hooks/useAuth";
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { loading, error, signIn, signUp } = useAuth();
 
-  async function handleLogin() {
-    setLoading(true);
-    setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError("Credenciales incorrectas. Verifica tu email y contraseña.");
-    setLoading(false);
-  }
-
-  async function handleRegister() {
-    setLoading(true);
-    setError(null);
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) setError("No se pudo crear la cuenta. Intenta con otro email.");
-    setLoading(false);
-  }
+  const isValid = isValidEmail(email) && password.length >= 6;
 
   return (
     <View className="flex-1 bg-surface justify-center px-6">
@@ -39,22 +28,24 @@ export default function LoginScreen() {
         editable={!loading}
       />
       <TextInput
-        className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-4 text-base"
-        placeholder="Contraseña"
+        className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-1 text-base"
+        placeholder="Contraseña (mín. 6 caracteres)"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         editable={!loading}
       />
 
+      <Text className="text-gray-400 text-xs mb-4">Mínimo 6 caracteres</Text>
+
       {error && (
         <Text className="text-red-500 text-sm mb-4">{error}</Text>
       )}
 
       <TouchableOpacity
-        className="bg-primary rounded-xl py-4 mb-3 items-center"
-        onPress={handleLogin}
-        disabled={loading}
+        className={`rounded-xl py-4 mb-3 items-center ${isValid && !loading ? "bg-primary" : "bg-gray-300"}`}
+        onPress={() => signIn(email, password)}
+        disabled={!isValid || loading}
       >
         {loading ? (
           <ActivityIndicator color="#fff" />
@@ -64,11 +55,13 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       <TouchableOpacity
-        className="rounded-xl py-4 items-center border border-primary"
-        onPress={handleRegister}
-        disabled={loading}
+        className={`rounded-xl py-4 items-center border ${isValid && !loading ? "border-primary" : "border-gray-300"}`}
+        onPress={() => signUp(email, password)}
+        disabled={!isValid || loading}
       >
-        <Text className="text-primary font-semibold text-base">Crear cuenta</Text>
+        <Text className={`font-semibold text-base ${isValid && !loading ? "text-primary" : "text-gray-400"}`}>
+          Crear cuenta
+        </Text>
       </TouchableOpacity>
     </View>
   );
