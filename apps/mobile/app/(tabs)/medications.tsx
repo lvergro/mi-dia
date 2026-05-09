@@ -152,26 +152,23 @@ export default function MedicationsScreen() {
         values.recurrence_type === "daily" ? null : values.recurrence_days,
     };
 
+    function handleError(error: Error & { code?: string }) {
+      if (error.code === "23505") {
+        Alert.alert("Conflicto", "Ya existe un item con ese nombre y hora.");
+      } else {
+        Alert.alert("Error", error.message || "No se pudo guardar el item.");
+      }
+    }
+
     if (editing) {
       updateMutation.mutate(
         { id: editing.id, data: payload },
-        {
-          onSuccess: () => setFormVisible(false),
-          onError: (error: Error & { code?: string }) => {
-            if (error.code === "23505") {
-              Alert.alert("Conflicto", "Ya existe un item con ese nombre y hora.");
-            }
-          },
-        }
+        { onSuccess: () => setFormVisible(false), onError: handleError }
       );
     } else {
       createMutation.mutate(payload, {
         onSuccess: () => setFormVisible(false),
-        onError: (error: Error & { code?: string }) => {
-          if (error.code === "23505") {
-            Alert.alert("Conflicto", "Ya existe un item con ese nombre y hora.");
-          }
-        },
+        onError: handleError,
       });
     }
   }

@@ -1,14 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Expo uses EXPO_PUBLIC_ prefix; Node scripts use SUPABASE_ prefix
+// Metro inlines EXPO_PUBLIC_ vars with dot notation only (not bracket notation)
 const supabaseUrl =
-  (typeof process !== "undefined" && process.env["EXPO_PUBLIC_SUPABASE_URL"]) ||
-  (typeof process !== "undefined" && process.env["SUPABASE_URL"]) ||
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  process.env.SUPABASE_URL ||
   "";
 
 const supabaseAnonKey =
-  (typeof process !== "undefined" && process.env["EXPO_PUBLIC_SUPABASE_ANON_KEY"]) ||
-  (typeof process !== "undefined" && process.env["SUPABASE_ANON_KEY"]) ||
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
   "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
