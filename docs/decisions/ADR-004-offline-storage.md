@@ -1,0 +1,31 @@
+---
+id: ADR-004
+title: Estrategia de almacenamiento offline
+status: proposed
+date: 2026-05-08
+deciders: [Luis Vergara]
+---
+
+## Context
+La app debe funcionar sin conexión para las operaciones del día actual (marcar cumplimiento, registrar items). Al reconectar, los cambios deben sincronizarse automáticamente con Supabase (NFR-AVAIL-02).
+
+## Decision
+A definir durante implementación. Se evaluará en el contexto real del MVP.
+
+## Options considered
+| Option | Pros | Cons |
+|--------|------|------|
+| AsyncStorage | simple, sin setup adicional, suficiente para datos ligeros | no relacional, sin queries complejas |
+| expo-sqlite / SQLite | relacional, queries, mejor para volumen creciente | más setup, migración de schema manual |
+| WatermelonDB | offline-first diseñado para React Native, sync built-in | complejidad alta para un MVP |
+| MMKV | muy rápido, key-value | no relacional, similar a AsyncStorage |
+
+## Consequences
+- Positive: decisión postergada permite evaluar necesidades reales de volumen y complejidad de queries antes de comprometerse.
+- Negative: decisión abierta bloquea implementar NFR-AVAIL-02 hasta que se resuelva.
+- Neutral: si el volumen de datos offline se mantiene pequeño (solo el día actual), AsyncStorage es suficiente.
+
+## Related
+- Containers: Local Storage, Mi Día Mobile
+- NFRs: NFR-AVAIL-02
+- FRs: FR-01, FR-04

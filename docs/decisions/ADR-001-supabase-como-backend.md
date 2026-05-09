@@ -1,0 +1,30 @@
+---
+id: ADR-001
+title: Usar Supabase como plataforma backend
+status: accepted
+date: 2026-05-08
+deciders: [Luis Vergara]
+---
+
+## Context
+El sistema necesita auth, base de datos relacional con aislamiento por usuario (RLS), y un scheduler para notificaciones push. Se requiere una solución gratuita en la etapa inicial.
+
+## Decision
+Usar Supabase como plataforma única de backend: Auth (GoTrue), Postgres 15 con RLS, y Edge Functions (Deno) para el scheduler de push.
+
+## Options considered
+| Option | Pros | Cons |
+|--------|------|------|
+| Supabase | conocido por el equipo, RLS nativo, free tier generoso, SDK para React Native | Edge Functions en Deno (menor ecosistema que Node) |
+| Firebase | muy maduro, SDK excelente para móvil | modelo NoSQL, sin RLS, costo puede escalar rápido |
+| Backend propio (Node + Postgres) | control total | más tiempo de setup, infraestructura adicional |
+| PocketBase | simple, self-hosted | menos soporte comunitario, requiere servidor propio |
+
+## Consequences
+- Positive: setup rápido, auth + DB + funciones en un solo proveedor, plan gratuito cubre el MVP.
+- Negative: acoplamiento al proveedor; migrar requeriría reescribir queries y auth.
+- Neutral: Edge Functions en Deno requiere adaptarse a su runtime si la lógica crece.
+
+## Related
+- Containers: Postgres DB, Supabase Auth, Push Scheduler
+- NFRs: NFR-SEC-01, NFR-SEC-02, NFR-SCALE-01
