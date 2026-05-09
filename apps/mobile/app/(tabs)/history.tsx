@@ -5,150 +5,155 @@ import {
   Modal,
   Pressable,
   RefreshControl,
-  ScrollView,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
-import type { DayHistory } from "../../hooks/useHistory";
 import { useHistory } from "../../hooks/useHistory";
+import type { DayHistory, DayHistoryItem, DayItemStatus } from "@mi-dia/core";
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Pendiente",
-  done: "Hecho",
-  skipped: "Saltado",
-  not_sure: "No recuerdo",
-};
+const RANGE_OPTIONS: (7 | 30)[] = [7, 30];
 
-const STATUS_COLOR: Record<string, string> = {
-  pending: "bg-pending",
-  done: "bg-done",
-  skipped: "bg-skipped",
-  not_sure: "bg-not_sure",
-};
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + "T12:00:00");
-  return date.toLocaleDateString("es", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+function pctColor(pct: number): string {
+  if (pct >= 80) return "#22c55e";
+  if (pct >= 50) return "#f59e0b";
+  return "#ef4444";
 }
 
-function AdherenceBadge({ pct }: { pct: number }) {
-  const color = pct >= 80 ? "bg-done" : pct >= 50 ? "bg-not_sure" : "bg-skipped";
+function statusIcon(status: DayItemStatus): string {
+  if (status === "done") return "✓";
+  if (status === "omitted") return "✗";
+  return "○";
+}
+
+function statusColor(status: DayItemStatus): string {
+  if (status === "done") return "#22c55e";
+  if (status === "omitted") return "#ef4444";
+  return "#9ca3af";
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00"); // mediodía para evitar desfase UTC
+  return d.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function formatTime(time: string): string {
+  return time.slice(0, 5); // 'HH:MM'
+}
+
+function DayRow({ item, onPress }: { item: DayHistory; onPress: () => void }) {
   return (
-    <View className={`${color} rounded-full px-3 py-1`}>
-      <Text className="text-white text-xs font-bold">{pct}%</Text>
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100"
+    >
+      <Text className="text-gray-800 capitalize">{formatDate(item.date)}</Text>
+      <View className="flex-row items-center gap-3">
+        <Text className="text-gray-500 text-sm">{item.done}/{item.total}</Text>
+        <View
+          style={{ backgroundColor: pctColor(item.pct) }}
+          className="w-10 h-10 rounded-full items-center justify-center"
+        >
+          <Text className="text-white text-xs font-bold">{item.pct}%</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function ItemRow({ item }: { item: DayHistoryItem }) {
+  return (
+    <View className="flex-row items-center gap-3 py-2 border-b border-gray-50">
+      <Text style={{ color: statusColor(item.status), fontSize: 18 }}>
+        {statusIcon(item.status)}
+      </Text>
+      <View>
+        <Text className="text-gray-800">{item.name}</Text>
+        <Text className="text-gray-400 text-xs">{formatTime(item.scheduled_time)}</Text>
+      </View>
     </View>
   );
 }
 
-function DayDetailModal({ day, onClose }: { day: DayHistory; onClose: () => void }) {
-  return (
-    <Modal visible animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 bg-black/40 justify-end" onPress={onClose}>
-        <Pressable className="bg-white rounded-t-2xl max-h-[80%]" onPress={() => {}}>
-          <View className="px-6 pt-6 pb-3 border-b border-gray-100 flex-row items-center justify-between">
-            <View>
-              <Text className="text-base font-semibold text-gray-900 capitalize">
-                {formatDate(day.date)}
-              </Text>
-              <Text className="text-sm text-muted mt-0.5">
-                {day.adherence.done}/{day.adherence.total} completados
-              </Text>
-            </View>
-            <AdherenceBadge pct={day.adherence.pct} />
-          </View>
-          <ScrollView contentContainerStyle={{ padding: 24 }}>
-            {day.items.map((item) => (
-              <View
-                key={item.id}
-                className="flex-row items-center justify-between py-3 border-b border-gray-100"
-              >
-                <View className="flex-1 mr-3">
-                  <Text className="text-sm font-medium text-gray-900">{item.title}</Text>
-                  {item.scheduled_time && (
-                    <Text className="text-xs text-muted mt-0.5">
-                      {item.scheduled_time.slice(0, 5)}
-                    </Text>
-                  )}
-                </View>
-                <View className={`rounded-full px-3 py-1 ${STATUS_COLOR[item.status] ?? "bg-gray-200"}`}>
-                  <Text className="text-xs text-white font-semibold">
-                    {STATUS_LABEL[item.status] ?? item.status}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-          <Pressable className="mx-6 mb-8 bg-gray-100 rounded-xl py-4 items-center" onPress={onClose}>
-            <Text className="text-gray-700 font-medium">Cerrar</Text>
-          </Pressable>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
 export default function HistoryScreen() {
-  const { data: history = [], isLoading, isError, refetch, isFetching } = useHistory(30);
-  const [selectedDay, setSelectedDay] = useState<DayHistory | null>(null);
+  const [range, setRange] = useState<7 | 30>(30);
+  const [selected, setSelected] = useState<DayHistory | null>(null);
+  const { data, isLoading, isError, refetch, isFetching } = useHistory(range);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-red-500">Error al cargar el historial.</Text>
+      </View>
+    );
+  }
 
   return (
-    <View className="flex-1 bg-surface">
-      <View className="px-4 pt-6 pb-3">
-        <Text className="text-2xl font-bold text-gray-900">Historial</Text>
-        <Text className="text-sm text-muted mt-0.5">Últimos 30 días</Text>
+    <View className="flex-1 bg-white">
+      {/* Toggle rango */}
+      <View className="flex-row justify-center gap-2 pt-4 pb-2">
+        {RANGE_OPTIONS.map((r) => (
+          <TouchableOpacity
+            key={r}
+            onPress={() => setRange(r)}
+            className={`px-4 py-2 rounded-full ${range === r ? "bg-blue-600" : "bg-gray-100"}`}
+          >
+            <Text className={range === r ? "text-white font-semibold" : "text-gray-700"}>
+              {r} días
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {isLoading ? (
+      {/* Lista */}
+      {!data || data.length === 0 ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
-        </View>
-      ) : isError ? (
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-4xl mb-3">⚠️</Text>
-          <Text className="text-muted text-center">No se pudo cargar el historial.</Text>
+          <Text className="text-gray-400">Sin historial para este rango.</Text>
         </View>
       ) : (
         <FlatList
-          data={history}
+          data={data}
           keyExtractor={(item) => item.date}
-          contentContainerStyle={{ padding: 16, paddingTop: 8 }}
-          refreshControl={
-            <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
-          }
+          refreshControl={<RefreshControl refreshing={isFetching} onRefresh={refetch} />}
           renderItem={({ item }) => (
-            <Pressable
-              className="bg-white rounded-2xl px-4 py-4 mb-3 border border-gray-100 flex-row items-center active:opacity-70"
-              onPress={() => setSelectedDay(item)}
-            >
-              <View className="flex-1">
-                <Text className="text-sm font-semibold text-gray-900 capitalize">
-                  {formatDate(item.date)}
-                </Text>
-                <Text className="text-xs text-muted mt-0.5">
-                  {item.adherence.done}/{item.adherence.total} ítems completados
-                </Text>
-              </View>
-              <AdherenceBadge pct={item.adherence.pct} />
-            </Pressable>
+            <DayRow item={item} onPress={() => setSelected(item)} />
           )}
-          ListEmptyComponent={
-            <View className="bg-white rounded-2xl p-6 border border-gray-100 items-center mt-4">
-              <Text className="text-4xl mb-3">📋</Text>
-              <Text className="text-muted text-center">
-                El historial de días anteriores aparecerá aquí una vez que empieces a registrar tu rutina diaria.
-              </Text>
-            </View>
-          }
         />
       )}
 
-      {selectedDay && (
-        <DayDetailModal day={selectedDay} onClose={() => setSelectedDay(null)} />
-      )}
+      {/* Modal detalle */}
+      <Modal
+        visible={selected !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setSelected(null)}
+      >
+        <View className="flex-1 justify-end">
+          <View className="bg-white rounded-t-2xl p-4 max-h-[70%]">
+            <View className="flex-row justify-between items-center mb-3">
+              <Text className="text-lg font-semibold capitalize">
+                {selected ? formatDate(selected.date) : ""}
+              </Text>
+              <TouchableOpacity onPress={() => setSelected(null)}>
+                <Text className="text-gray-500 text-base">Cerrar</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={selected?.items ?? []}
+              keyExtractor={(item) => item.item_id}
+              renderItem={({ item }) => <ItemRow item={item} />}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
