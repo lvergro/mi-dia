@@ -3,13 +3,12 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
   Text,
   TextInput,
   View,
-  ActionSheetIOS,
-  Platform,
 } from "react-native";
 import { Activity, Pill, Search } from "lucide-react-native";
 import type { Item } from "@mi-dia/types";
@@ -83,21 +82,11 @@ function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
   const isMed = item.type === "medication";
 
   function showMenu() {
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options: ["Cancelar", "Editar", "Eliminar"], cancelButtonIndex: 0, destructiveButtonIndex: 2 },
-        (idx) => {
-          if (idx === 1) onEdit(item);
-          if (idx === 2) onDelete(item);
-        },
-      );
-    } else {
-      Alert.alert(item.name, undefined, [
-        { text: "Editar", onPress: () => onEdit(item) },
-        { text: "Eliminar", style: "destructive", onPress: () => onDelete(item) },
-        { text: "Cancelar", style: "cancel" },
-      ]);
-    }
+    Alert.alert(item.name, undefined, [
+      { text: "Editar", onPress: () => onEdit(item) },
+      { text: "Eliminar", style: "destructive", onPress: () => onDelete(item) },
+      { text: "Cancelar", style: "cancel" },
+    ]);
   }
 
   return (
@@ -188,6 +177,12 @@ interface SectionData {
   items: Item[];
 }
 
+const TABS: { key: FilterTab; label: string }[] = [
+  { key: "all", label: "Todos" },
+  { key: "medication", label: "Medicamentos" },
+  { key: "activity", label: "Actividades" },
+];
+
 export default function MedicationsScreen() {
   const { data: items = [], isLoading, isError, refetch, isFetching } = useItems();
   const createMutation = useCreateItem();
@@ -260,15 +255,9 @@ export default function MedicationsScreen() {
 
   const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
-  const TABS: { key: FilterTab; label: string }[] = [
-    { key: "all", label: "Todos" },
-    { key: "medication", label: "Medicamentos" },
-    { key: "activity", label: "Actividades" },
-  ];
-
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.surface }}>
-      {/* Header */}
+  const listHeader = (
+    <View style={{ backgroundColor: colors.surface }}>
+      {/* Title row */}
       <View
         style={{
           paddingHorizontal: spacing.lg,
@@ -282,7 +271,7 @@ export default function MedicationsScreen() {
           borderBottomColor: colors.cardBorder,
         }}
       >
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, marginRight: spacing.md }}>
           <Text style={{ fontSize: 22, fontWeight: "700", color: colors.textPrimary }}>Rutina</Text>
           <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
             Organiza tus medicamentos y actividades
@@ -294,10 +283,10 @@ export default function MedicationsScreen() {
             borderRadius: radii.md,
             paddingHorizontal: spacing.md,
             paddingVertical: 8,
-            flexDirection: "row",
             alignItems: "center",
-            gap: 4,
+            justifyContent: "center",
             marginTop: 2,
+            opacity: isMutating ? 0.6 : 1,
           })}
           onPress={openCreate}
           disabled={isMutating}
@@ -322,7 +311,7 @@ export default function MedicationsScreen() {
             backgroundColor: colors.gray100,
             borderRadius: radii.lg,
             paddingHorizontal: 12,
-            paddingVertical: 8,
+            paddingVertical: Platform.OS === "android" ? 6 : 8,
             gap: 8,
           }}
         >
@@ -334,7 +323,6 @@ export default function MedicationsScreen() {
             placeholderTextColor={colors.textMuted}
             style={{ flex: 1, fontSize: 14, color: colors.textPrimary, padding: 0 }}
             returnKeyType="search"
-            clearButtonMode="while-editing"
           />
         </View>
       </View>
@@ -347,6 +335,8 @@ export default function MedicationsScreen() {
           paddingBottom: spacing.md,
           backgroundColor: colors.white,
           gap: 8,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.cardBorder,
         }}
       >
         {TABS.map((tab) => {
@@ -376,87 +366,101 @@ export default function MedicationsScreen() {
         })}
       </View>
 
-      {isLoading ? (
+      {/* Empty state */}
+      {!isLoading && !isError && items.length === 0 && (
+        <View
+          style={{
+            backgroundColor: colors.white,
+            borderRadius: radii.xl,
+            padding: 28,
+            borderWidth: 1,
+            borderColor: colors.cardBorder,
+            alignItems: "center",
+            margin: spacing.lg,
+            marginTop: spacing.xl,
+          }}
+        >
+          <Text style={{ fontSize: 40, marginBottom: 12 }}>💊</Text>
+          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.textPrimary, marginBottom: 6 }}>
+            Sin rutina configurada
+          </Text>
+          <Text
+            style={{ color: colors.textMuted, textAlign: "center", fontSize: 14, marginBottom: 20, lineHeight: 20 }}
+          >
+            Agrega medicamentos y actividades para que aparezcan en tu checklist diario.
+          </Text>
+          <Pressable
+            style={{ backgroundColor: colors.primary, borderRadius: radii.md, paddingHorizontal: 20, paddingVertical: 12 }}
+            onPress={openCreate}
+          >
+            <Text style={{ color: colors.white, fontWeight: "600" }}>Agregar el primero</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {!isLoading && !isError && items.length > 0 && filtered.length === 0 && (
+        <View style={{ alignItems: "center", paddingTop: 32 }}>
+          <Text style={{ fontSize: 14, color: colors.textMuted }}>Sin resultados para tu búsqueda</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.surface }}>
+        {listHeader}
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
-      ) : isError ? (
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.surface }}>
+        {listHeader}
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
           <Text style={{ fontSize: 36, marginBottom: 12 }}>⚠️</Text>
           <Text style={{ color: colors.textMuted, textAlign: "center" }}>No se pudieron cargar los items.</Text>
         </View>
-      ) : (
-        <FlatList
-          data={sections}
-          keyExtractor={(section) => section.key}
-          contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl }}
-          refreshControl={
-            <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor={colors.primary} />
-          }
-          renderItem={({ item: section }) =>
-            section.items.length === 0 ? null : (
-              <View style={{ marginBottom: spacing.lg }}>
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: "700",
-                    color: colors.textMuted,
-                    letterSpacing: 0.8,
-                    marginBottom: spacing.sm,
-                    marginLeft: 4,
-                  }}
-                >
-                  {section.title}
-                </Text>
-                {section.items.map((item) => (
-                  <ItemCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} />
-                ))}
-              </View>
-            )
-          }
-          ListEmptyComponent={
-            items.length === 0 ? (
-              <View
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <FlatList
+        data={sections}
+        keyExtractor={(section) => section.key}
+        contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl }}
+        refreshControl={
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor={colors.primary} />
+        }
+        ListHeaderComponent={listHeader}
+        renderItem={({ item: section }) =>
+          section.items.length === 0 ? null : (
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text
                 style={{
-                  backgroundColor: colors.white,
-                  borderRadius: radii.xl,
-                  padding: 28,
-                  borderWidth: 1,
-                  borderColor: colors.cardBorder,
-                  alignItems: "center",
-                  marginTop: spacing.xl,
+                  fontSize: 11,
+                  fontWeight: "700",
+                  color: colors.textMuted,
+                  letterSpacing: 0.8,
+                  marginBottom: spacing.sm,
+                  marginLeft: 4,
                 }}
               >
-                <Text style={{ fontSize: 40, marginBottom: 12 }}>💊</Text>
-                <Text style={{ fontSize: 16, fontWeight: "600", color: colors.textPrimary, marginBottom: 6 }}>
-                  Sin rutina configurada
-                </Text>
-                <Text
-                  style={{
-                    color: colors.textMuted,
-                    textAlign: "center",
-                    fontSize: 14,
-                    marginBottom: 20,
-                    lineHeight: 20,
-                  }}
-                >
-                  Agrega medicamentos y actividades para que aparezcan en tu checklist diario.
-                </Text>
-                <Pressable
-                  style={{ backgroundColor: colors.primary, borderRadius: radii.md, paddingHorizontal: 20, paddingVertical: 12 }}
-                  onPress={openCreate}
-                >
-                  <Text style={{ color: colors.white, fontWeight: "600" }}>Agregar el primero</Text>
-                </Pressable>
-              </View>
-            ) : filtered.length === 0 ? (
-              <View style={{ alignItems: "center", paddingTop: 32 }}>
-                <Text style={{ fontSize: 14, color: colors.textMuted }}>Sin resultados para tu búsqueda</Text>
-              </View>
-            ) : null
-          }
-        />
-      )}
+                {section.title}
+              </Text>
+              {section.items.map((item) => (
+                <ItemCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} />
+              ))}
+            </View>
+          )
+        }
+      />
 
       <ItemForm
         visible={formVisible}

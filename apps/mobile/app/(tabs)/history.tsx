@@ -87,7 +87,8 @@ function StatsHeader({ data }: { data: DayHistory[] }) {
           borderRadius: radii.lg,
           borderWidth: 1,
           borderColor: colors.cardBorder,
-          padding: spacing.md,
+          paddingVertical: spacing.lg,
+          paddingHorizontal: spacing.sm,
           alignItems: "center",
           gap: 4,
         }}
@@ -104,7 +105,8 @@ function StatsHeader({ data }: { data: DayHistory[] }) {
           borderRadius: radii.lg,
           borderWidth: 1,
           borderColor: colors.cardBorder,
-          padding: spacing.md,
+          paddingVertical: spacing.lg,
+          paddingHorizontal: spacing.sm,
           alignItems: "center",
           gap: 4,
         }}
@@ -121,7 +123,8 @@ function StatsHeader({ data }: { data: DayHistory[] }) {
           borderRadius: radii.lg,
           borderWidth: 1,
           borderColor: colors.cardBorder,
-          padding: spacing.md,
+          paddingVertical: spacing.lg,
+          paddingHorizontal: spacing.sm,
           alignItems: "center",
           gap: 4,
         }}
