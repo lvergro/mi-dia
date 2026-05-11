@@ -61,12 +61,14 @@ export interface DailyNote {
   user_id: string;
   content: string;
   date: string; // "YYYY-MM-DD"
+  mood: MoodValue | null;
   created_at: string; // timestamp — marca de tiempo de la entrada
 }
 
 export type DailyNoteInsert = {
   content: string;
   date: string;
+  mood?: MoodValue | null;
 };
 
 export type ItemType = "medication" | "activity";
