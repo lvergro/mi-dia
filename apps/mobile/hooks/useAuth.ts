@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Alert } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import { makeRedirectUri } from "expo-auth-session";
-import { signIn, signUp, signOut, getGoogleOAuthUrl, exchangeOAuthCode } from "@mi-dia/database";
+import { signIn, signUp, signOut, getGoogleOAuthUrl, setSessionFromOAuthCallback } from "@mi-dia/database";
 import { useSessionStore } from "./useSession";
 
 interface AuthState {
@@ -85,7 +85,7 @@ export function useAuth() {
       const url = await getGoogleOAuthUrl(redirectUri);
       const result = await WebBrowser.openAuthSessionAsync(url, redirectUri);
       if (result.type === "success") {
-        const session = await exchangeOAuthCode(result.url);
+        const session = await setSessionFromOAuthCallback(result.url);
         useSessionStore.getState().setSession(session);
       }
       setState({ loading: false, error: null });

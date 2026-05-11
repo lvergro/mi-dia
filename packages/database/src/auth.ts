@@ -47,8 +47,14 @@ export async function getGoogleOAuthUrl(redirectTo: string): Promise<string> {
   return data.url!;
 }
 
-export async function exchangeOAuthCode(url: string): Promise<Session> {
-  const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+export async function setSessionFromOAuthCallback(url: string): Promise<Session> {
+  // Implicit flow: tokens are in the URL fragment (#access_token=...&refresh_token=...)
+  const fragment = url.includes("#") ? url.split("#")[1] : url.split("?")[1] ?? "";
+  const params = new URLSearchParams(fragment);
+  const access_token = params.get("access_token");
+  const refresh_token = params.get("refresh_token");
+  if (!access_token || !refresh_token) throw new Error("No se recibieron tokens de autenticación");
+  const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
   if (error) throw error;
   return data.session!;
 }

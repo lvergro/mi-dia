@@ -24,5 +24,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,
+    // Implicit flow avoids expo-crypto (PKCE) which requires native modules not available in Expo Go
+    flowType: "implicit",
   },
 });
