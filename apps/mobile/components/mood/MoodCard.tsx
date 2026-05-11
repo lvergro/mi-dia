@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Animated, Pressable, Text, TextInput, View } from "react-native";
+import { Animated, Pressable, Text, View } from "react-native";
 import type { MoodValue } from "@mi-dia/types";
 
 interface MoodOption {
@@ -11,23 +11,21 @@ interface MoodOption {
 }
 
 const MOODS: MoodOption[] = [
-  { value: 1, emoji: "😢", label: "Muy mal",    color: "#ef4444", bg: "#fef2f2" },
-  { value: 2, emoji: "😕", label: "Mal",        color: "#f97316", bg: "#fff7ed" },
-  { value: 3, emoji: "😐", label: "Normal",     color: "#eab308", bg: "#fefce8" },
-  { value: 4, emoji: "🙂", label: "Bien",       color: "#22c55e", bg: "#f0fdf4" },
-  { value: 5, emoji: "😄", label: "Excelente",  color: "#3b82f6", bg: "#eff6ff" },
+  { value: 1, emoji: "😢", label: "Muy mal",   color: "#ef4444", bg: "#fef2f2" },
+  { value: 2, emoji: "😕", label: "Mal",       color: "#f97316", bg: "#fff7ed" },
+  { value: 3, emoji: "😐", label: "Normal",    color: "#eab308", bg: "#fefce8" },
+  { value: 4, emoji: "🙂", label: "Bien",      color: "#22c55e", bg: "#f0fdf4" },
+  { value: 5, emoji: "😄", label: "Excelente", color: "#3b82f6", bg: "#eff6ff" },
 ];
 
 interface MoodCardProps {
   mood: MoodValue | null;
-  note: string;
   onMoodChange: (value: MoodValue) => void;
-  onNoteChange: (value: string) => void;
   isSaving: boolean;
   readonly?: boolean;
 }
 
-export function MoodCard({ mood, note, onMoodChange, onNoteChange, isSaving, readonly }: MoodCardProps) {
+export function MoodCard({ mood, onMoodChange, isSaving, readonly }: MoodCardProps) {
   const selectedOption = MOODS.find((m) => m.value === mood);
   const borderAnim = useRef(new Animated.Value(0)).current;
   const prevColor = useRef<string>("#e5e7eb");
@@ -61,11 +59,16 @@ export function MoodCard({ mood, note, onMoodChange, onNoteChange, isSaving, rea
         padding: 16,
       }}
     >
-      <Text style={{ fontSize: 13, fontWeight: "600", color: "#6b7280", marginBottom: 12 }}>
-        ¿Cómo te sientes hoy?
-      </Text>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <Text style={{ fontSize: 13, fontWeight: "600", color: "#6b7280" }}>
+          ¿Cómo te sientes hoy?
+        </Text>
+        {isSaving && (
+          <Text style={{ fontSize: 11, color: "#9ca3af" }}>Guardando…</Text>
+        )}
+      </View>
 
-      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 14 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         {MOODS.map((option) => {
           const isSelected = mood === option.value;
           return (
@@ -108,43 +111,6 @@ export function MoodCard({ mood, note, onMoodChange, onNoteChange, isSaving, rea
           );
         })}
       </View>
-
-      {!readonly && (
-        <>
-          <TextInput
-            value={note}
-            onChangeText={onNoteChange}
-            placeholder="Añade una nota sobre tu día…"
-            placeholderTextColor="#9ca3af"
-            multiline
-            numberOfLines={3}
-            editable={!readonly}
-            style={{
-              borderWidth: 1,
-              borderColor: "#e5e7eb",
-              borderRadius: 12,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              fontSize: 13,
-              color: "#111827",
-              minHeight: 72,
-              textAlignVertical: "top",
-              backgroundColor: "#ffffff",
-            }}
-          />
-          {isSaving && (
-            <Text style={{ fontSize: 11, color: "#9ca3af", marginTop: 6, textAlign: "right" }}>
-              Guardando…
-            </Text>
-          )}
-        </>
-      )}
-
-      {readonly && note.length > 0 && (
-        <Text style={{ fontSize: 13, color: "#374151", fontStyle: "italic" }}>
-          {note}
-        </Text>
-      )}
     </Animated.View>
   );
 }
