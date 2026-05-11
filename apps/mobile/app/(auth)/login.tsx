@@ -12,6 +12,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { signIn, signUp, sendPasswordResetEmail } from "@mi-dia/database";
 import { useSessionStore } from "../../hooks/useSession";
@@ -22,6 +23,7 @@ function isValidEmail(email: string): boolean {
 }
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { signInWithGoogle, loading: googleLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +41,7 @@ export default function LoginScreen() {
     try {
       const session = await signIn(emailTrimmed, password);
       useSessionStore.getState().setSession(session);
+      router.replace("/(tabs)");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       Alert.alert("Error al ingresar", msg);
@@ -54,6 +57,7 @@ export default function LoginScreen() {
       const session = await signUp(emailTrimmed, password);
       if (session) {
         useSessionStore.getState().setSession(session);
+        router.replace("/(tabs)");
       } else {
         Alert.alert(
           "Confirma tu email",
