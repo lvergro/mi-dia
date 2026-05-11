@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { Edit2, Trash2 } from "lucide-react-native";
 import type { Item } from "@mi-dia/types";
 import { ItemForm, type ItemFormValues } from "../../components/item/ItemForm";
 import { useItems } from "../../hooks/useItems";
@@ -16,6 +17,7 @@ import {
   useUpdateItem,
   useSoftDeleteItem,
 } from "../../hooks/useItemMutations";
+import { colors, radii, shadows, spacing } from "../../theme";
 
 function getTimeBlock(specificTime: string): "mañana" | "tarde" | "noche" {
   const [h] = specificTime.split(":").map(Number);
@@ -45,11 +47,6 @@ const RECURRENCE_LABEL: Record<string, string> = {
   specific_days: "Días específicos",
 };
 
-const TYPE_LABEL: Record<string, string> = {
-  medication: "Medicamento",
-  activity: "Actividad",
-};
-
 const DAY_NAMES = ["", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 interface ItemCardProps {
@@ -59,43 +56,80 @@ interface ItemCardProps {
 }
 
 function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
+  const isMed = item.type === "medication";
   return (
-    <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-      <View className="flex-row items-start">
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2 flex-wrap">
-            <Text className="text-base font-semibold text-gray-900">{item.name}</Text>
-            <View className="bg-primary/10 rounded-full px-2 py-0.5">
-              <Text className="text-xs text-primary font-medium">
-                {TYPE_LABEL[item.type]}
-              </Text>
-            </View>
+    <View
+      style={{
+        backgroundColor: colors.white,
+        borderRadius: radii.lg,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        marginBottom: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+        flexDirection: "row",
+        alignItems: "center",
+        ...shadows.subtle,
+      }}
+    >
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 3 }}>
+          <Text style={{ fontSize: 15, fontWeight: "600", color: colors.textPrimary }}>{item.name}</Text>
+          <View
+            style={{
+              borderRadius: radii.full,
+              paddingHorizontal: 7,
+              paddingVertical: 2,
+              backgroundColor: isMed ? colors.infoSubtle : colors.primarySubtle,
+            }}
+          >
+            <Text style={{ fontSize: 10, fontWeight: "600", color: isMed ? colors.info : colors.primary }}>
+              {isMed ? "Med" : "Act"}
+            </Text>
           </View>
-          {item.dose ? (
-            <Text className="text-sm text-muted mt-0.5">{item.dose}</Text>
-          ) : null}
-          <Text className="text-xs text-gray-400 mt-1">
-            {item.specific_time.slice(0, 5)} · {RECURRENCE_LABEL[item.recurrence_type]}
-            {item.recurrence_type === "specific_days" && item.recurrence_days
-              ? ` (${item.recurrence_days.map((d) => DAY_NAMES[d]).join(", ")})`
-              : ""}
-          </Text>
         </View>
+        {item.dose ? (
+          <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 2 }}>{item.dose}</Text>
+        ) : null}
+        <Text style={{ fontSize: 12, color: colors.textMuted }}>
+          {item.specific_time.slice(0, 5)}
+          {" · "}
+          {RECURRENCE_LABEL[item.recurrence_type]}
+          {item.recurrence_type === "specific_days" && item.recurrence_days
+            ? ` · ${item.recurrence_days.map((d) => DAY_NAMES[d]).join(" ")}`
+            : ""}
+        </Text>
+      </View>
 
-        <View className="flex-row gap-2 ml-3">
-          <Pressable
-            onPress={() => onEdit(item)}
-            className="bg-gray-100 rounded-xl px-3 py-2"
-          >
-            <Text className="text-sm text-gray-700">Editar</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => onDelete(item)}
-            className="bg-red-50 rounded-xl px-3 py-2"
-          >
-            <Text className="text-sm text-red-600">Eliminar</Text>
-          </Pressable>
-        </View>
+      <View style={{ flexDirection: "row", gap: 4, marginLeft: spacing.sm }}>
+        <Pressable
+          onPress={() => onEdit(item)}
+          style={({ pressed }) => ({
+            width: 36,
+            height: 36,
+            borderRadius: radii.md,
+            backgroundColor: pressed ? colors.primarySubtle : colors.gray100,
+            alignItems: "center",
+            justifyContent: "center",
+          })}
+          hitSlop={4}
+        >
+          <Edit2 size={16} color={colors.textSecondary} strokeWidth={1.8} />
+        </Pressable>
+        <Pressable
+          onPress={() => onDelete(item)}
+          style={({ pressed }) => ({
+            width: 36,
+            height: 36,
+            borderRadius: radii.md,
+            backgroundColor: pressed ? colors.dangerSubtle : colors.gray100,
+            alignItems: "center",
+            justifyContent: "center",
+          })}
+          hitSlop={4}
+        >
+          <Trash2 size={16} color={colors.danger} strokeWidth={1.8} />
+        </Pressable>
       </View>
     </View>
   );
@@ -184,43 +218,48 @@ export default function MedicationsScreen() {
     createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
-    <View className="flex-1 bg-surface">
-      <View className="px-4 pt-6 pb-2 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold text-gray-900">Items</Text>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.xl, paddingBottom: spacing.sm, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={{ fontSize: 22, fontWeight: "700", color: colors.textPrimary }}>Rutina</Text>
         <Pressable
-          className="bg-primary rounded-xl px-4 py-2"
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? colors.primaryDark : colors.primary,
+            borderRadius: radii.md,
+            paddingHorizontal: spacing.md,
+            paddingVertical: 8,
+          })}
           onPress={openCreate}
           disabled={isMutating}
         >
-          <Text className="text-white font-semibold">+ Nuevo</Text>
+          <Text style={{ color: colors.white, fontWeight: "600", fontSize: 14 }}>+ Nuevo</Text>
         </Pressable>
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : isError ? (
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-4xl mb-3">⚠️</Text>
-          <Text className="text-muted text-center">No se pudieron cargar los items.</Text>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+          <Text style={{ fontSize: 36, marginBottom: 12 }}>⚠️</Text>
+          <Text style={{ color: colors.textMuted, textAlign: "center" }}>No se pudieron cargar los items.</Text>
         </View>
       ) : (
         <FlatList
           data={sections}
           keyExtractor={(section) => section.key}
-          contentContainerStyle={{ padding: 16, paddingTop: 8 }}
+          contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: 4, paddingBottom: spacing.xl }}
           refreshControl={
             <RefreshControl
               refreshing={isFetching && !isLoading}
               onRefresh={refetch}
-              tintColor="#4f46e5"
+              tintColor={colors.primary}
             />
           }
           renderItem={({ item: section }) =>
             section.items.length === 0 ? null : (
-              <View className="mb-4">
-                <Text className="text-sm font-semibold text-gray-500 uppercase mb-2">
+              <View style={{ marginBottom: spacing.lg }}>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: colors.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: spacing.sm }}>
                   {section.title}
                 </Text>
                 {section.items.map((item) => (
@@ -236,16 +275,17 @@ export default function MedicationsScreen() {
           }
           ListEmptyComponent={
             items.length === 0 ? (
-              <View className="bg-white rounded-2xl p-6 border border-gray-100 items-center mt-4">
-                <Text className="text-4xl mb-3">📋</Text>
-                <Text className="text-muted text-center">
-                  Aún no tienes items registrados.
+              <View style={{ backgroundColor: colors.white, borderRadius: radii.xl, padding: 28, borderWidth: 1, borderColor: colors.cardBorder, alignItems: "center", marginTop: spacing.xl }}>
+                <Text style={{ fontSize: 40, marginBottom: 12 }}>💊</Text>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: colors.textPrimary, marginBottom: 6 }}>Sin rutina configurada</Text>
+                <Text style={{ color: colors.textMuted, textAlign: "center", fontSize: 14, marginBottom: 20, lineHeight: 20 }}>
+                  Agrega medicamentos y actividades para que aparezcan en tu checklist diario.
                 </Text>
                 <Pressable
-                  className="mt-4 bg-primary rounded-xl px-5 py-3"
+                  style={{ backgroundColor: colors.primary, borderRadius: radii.md, paddingHorizontal: 20, paddingVertical: 12 }}
                   onPress={openCreate}
                 >
-                  <Text className="text-white font-semibold">Agregar el primero</Text>
+                  <Text style={{ color: colors.white, fontWeight: "600" }}>Agregar el primero</Text>
                 </Pressable>
               </View>
             ) : null
