@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Alert, Image, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { signIn, signUp } from "@mi-dia/database";
 import { useSessionStore } from "../../hooks/useSession";
@@ -56,8 +56,15 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 bg-surface justify-center px-6">
-      <Text className="text-3xl font-bold text-primary mb-2">Mi Día</Text>
-      <Text className="text-muted mb-8">Registro de medicamentos diarios</Text>
+      <View className="items-center mb-8">
+        <Image
+          source={require("../../assets/icon.png")}
+          style={{ width: 100, height: 100, borderRadius: 24, marginBottom: 16 }}
+          resizeMode="contain"
+        />
+        <Text className="text-3xl font-bold text-primary">Trazadía</Text>
+        <Text className="text-muted mt-1">Tu diario de salud diario</Text>
+      </View>
 
       <TextInput
         className="bg-white border border-gray-200 rounded-xl px-4 py-3 mb-3 text-base"

@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#56d2b2"
+      "backgroundColor": "#2fcfc2"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#56d2b2"
+        "backgroundColor": "#2fcfc2"
       },
       "package": "com.midia.app",
       "permissions": ["RECEIVE_BOOT_COMPLETED"]
