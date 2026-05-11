@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../hooks/useAuth";
 
 function HeaderLeft() {
@@ -44,6 +45,9 @@ const sharedHeader = {
 };
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = 56 + insets.bottom;
+
   return (
     <Tabs
       screenOptions={{
@@ -53,9 +57,9 @@ export default function TabsLayout() {
           backgroundColor: "#ffffff",
           borderTopColor: "#f1f5f9",
           borderTopWidth: 1,
-          paddingBottom: 6,
+          paddingBottom: insets.bottom || 6,
           paddingTop: 4,
-          height: 60,
+          height: tabBarHeight,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: "500" },
         headerStyle: { backgroundColor: "#ffffff", elevation: 0, shadowOpacity: 0 },
