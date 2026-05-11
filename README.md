@@ -1,8 +1,8 @@
-# Mi Día
+# Trazadía
 
-App móvil de checklist diario de medicamentos, procedimientos y autocuidado. Permite registrar qué tomó el usuario, a qué hora, con qué estado (hecho / saltado / no recuerdo), y llevar una bitácora diaria.
+Diario de salud personal. Registra tu estado de ánimo, medicamentos, procedimientos y notas diarias. Lleva un historial y cuida tu bienestar día a día.
 
-MVP orientado a Android con Expo + Supabase.
+Disponible en Android via Expo.
 
 ---
 
@@ -10,7 +10,7 @@ MVP orientado a Android con Expo + Supabase.
 
 | Capa | Tecnología |
 |------|-----------|
-| Mobile | Expo SDK 52 · Expo Router v4 · React Native |
+| Mobile | Expo SDK 54 · Expo Router v4 · React Native |
 | Estilos | NativeWind (Tailwind para React Native) |
 | Backend | Supabase (PostgreSQL 15 + Auth + RLS) |
 | Estado servidor | TanStack Query |
@@ -23,9 +23,9 @@ MVP orientado a Android con Expo + Supabase.
 ## Estructura
 
 ```
-mi-dia/
+trazadia/
 ├── apps/
-│   └── mobile/          # App Expo (Android MVP)
+│   └── mobile/          # App Expo (Android)
 ├── packages/
 │   ├── types/           # Tipos TypeScript del dominio
 │   ├── validators/      # Zod schemas
@@ -49,14 +49,16 @@ Supabase (PostgreSQL + Auth + RLS)
 
 ---
 
-## Pantallas MVP
+## Pantallas
 
 | Pantalla | Descripción |
 |----------|-------------|
-| Login | Autenticación con email y contraseña (Supabase Auth) |
-| Mi Día | Checklist diario agrupado por bloques: Mañana / Tarde / Noche |
+| Login | Email/contraseña o Google OAuth |
+| Mi Día | Vista del día: checklist de rutinas, navegación a días anteriores |
+| Historial | Historial de adhesión por rango de fechas |
+| Notas | Notas libres con selector de ánimo por entrada |
 | Medicamentos | CRUD de medicamentos del usuario |
-| Historial | Días anteriores con estado de cada ítem |
+| Mi Cuenta | Email, cambio de contraseña, eliminar cuenta |
 
 ---
 
@@ -80,6 +82,7 @@ cp .env.example .env.local
 # Editar .env.local con EXPO_PUBLIC_SUPABASE_URL y EXPO_PUBLIC_SUPABASE_ANON_KEY
 
 # 3. Aplicar migraciones al proyecto Supabase
+npx supabase link --project-ref <project-ref>
 npx supabase db push
 
 # 4. Iniciar la app
@@ -88,14 +91,18 @@ pnpm --filter mobile start
 
 ---
 
+## Google OAuth (opcional)
+
+Para activar el login con Google, sigue los pasos en [`docs/GOOGLE_OAUTH_SETUP.md`](docs/GOOGLE_OAUTH_SETUP.md).
+
+---
+
 ## Comandos
 
 ```bash
 pnpm install          # Instalar dependencias
 pnpm build            # Compilar todos los paquetes
-pnpm type-check       # Verificar tipos en todo el monorepo
 pnpm test             # Ejecutar tests
-pnpm lint             # Linting
 
 npx supabase db push  # Aplicar migraciones a Supabase Cloud
 ```
@@ -107,5 +114,4 @@ npx supabase db push  # Aplicar migraciones a Supabase Cloud
 - **RLS obligatorio** — toda tabla tiene Row Level Security. Un usuario nunca ve datos de otro.
 - **Sin secretos en código** — credenciales solo en variables de entorno, nunca en commits.
 - **Sin recomendaciones médicas** — el sistema solo registra y muestra. Nunca sugiere repetir dosis.
-- **`completed_at` obligatorio** — al marcar un ítem como "done", se registra el timestamp exacto en UTC.
-- **Advertencia `not_sure`** — al marcar "no recuerdo", se muestra: *"No hay confirmación de toma. Revisa tu pastillero o consulta tus indicaciones médicas antes de repetir una dosis."*
+- **Advertencia `not_sure`** — al marcar "no recuerdo", se muestra aviso médico antes de cualquier acción.
