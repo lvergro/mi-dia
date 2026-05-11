@@ -11,9 +11,11 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Send } from "lucide-react-native";
 import { useAllNotes, useNotesForDate, useCreateNote, useDeleteNote } from "../../hooks/useNotes";
 import { useMood } from "../../hooks/useMood";
 import { MoodCard } from "../../components/mood/MoodCard";
+import { colors, radii, shadows, spacing } from "../../theme";
 import type { DailyNote, MoodValue } from "@mi-dia/types";
 
 function getTodayLocal(): string {
@@ -32,12 +34,12 @@ function formatNoteTime(isoString: string): string {
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
 
-const MOOD_OPTIONS: { value: MoodValue; emoji: string; color: string }[] = [
-  { value: 1, emoji: "😢", color: "#ef4444" },
-  { value: 2, emoji: "😕", color: "#f97316" },
-  { value: 3, emoji: "😐", color: "#eab308" },
-  { value: 4, emoji: "🙂", color: "#22c55e" },
-  { value: 5, emoji: "😄", color: "#3b82f6" },
+const MOOD_OPTIONS: { value: MoodValue; emoji: string; color: string; bg: string }[] = [
+  { value: 1, emoji: "😢", color: colors.mood1, bg: colors.dangerSubtle },
+  { value: 2, emoji: "😕", color: colors.mood2, bg: colors.warningSubtle },
+  { value: 3, emoji: "😐", color: colors.mood3, bg: "#fefce8" },
+  { value: 4, emoji: "🙂", color: colors.mood4, bg: colors.successSubtle },
+  { value: 5, emoji: "😄", color: colors.mood5, bg: colors.infoSubtle },
 ];
 
 function groupByDate(notes: DailyNote[]): { title: string; data: DailyNote[] }[] {
@@ -58,7 +60,7 @@ function MiniMoodPicker({
   onSelect: (v: MoodValue | null) => void;
 }) {
   return (
-    <View style={{ flexDirection: "row", gap: 6, marginBottom: 8 }}>
+    <View style={{ flexDirection: "row", gap: 6, marginBottom: 10 }}>
       {MOOD_OPTIONS.map((opt) => {
         const isSelected = selected === opt.value;
         return (
@@ -66,18 +68,18 @@ function MiniMoodPicker({
             key={opt.value}
             onPress={() => onSelect(isSelected ? null : opt.value)}
             style={({ pressed }) => ({
-              width: 36,
-              height: 36,
-              borderRadius: 18,
+              width: 38,
+              height: 38,
+              borderRadius: 19,
               borderWidth: isSelected ? 2.5 : 1,
-              borderColor: isSelected ? opt.color : "#e5e7eb",
-              backgroundColor: isSelected ? `${opt.color}18` : "#f9fafb",
+              borderColor: isSelected ? opt.color : colors.cardBorder,
+              backgroundColor: isSelected ? opt.bg : colors.gray50,
               alignItems: "center",
               justifyContent: "center",
               opacity: pressed ? 0.75 : 1,
             })}
           >
-            <Text style={{ fontSize: 18 }}>{opt.emoji}</Text>
+            <Text style={{ fontSize: 20 }}>{opt.emoji}</Text>
           </Pressable>
         );
       })}
@@ -90,21 +92,27 @@ function NoteRow({ note, onDelete }: { note: DailyNote; onDelete: () => void }) 
   return (
     <Pressable
       onLongPress={onDelete}
-      style={{
-        marginHorizontal: 16,
-        marginTop: 8,
-        padding: 14,
-        backgroundColor: "#ffffff",
-        borderRadius: 12,
+      style={({ pressed }) => ({
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.sm,
+        padding: spacing.md,
+        backgroundColor: moodOpt ? moodOpt.bg : colors.white,
+        borderRadius: radii.lg,
         borderWidth: 1,
-        borderColor: "#e5e7eb",
-      }}
+        borderColor: moodOpt ? `${moodOpt.color}30` : colors.cardBorder,
+        opacity: pressed ? 0.85 : 1,
+        ...shadows.subtle,
+      })}
     >
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6, gap: 6 }}>
-        <Text style={{ fontSize: 11, color: "#9ca3af" }}>{formatNoteTime(note.created_at)}</Text>
-        {moodOpt && <Text style={{ fontSize: 16 }}>{moodOpt.emoji}</Text>}
+        <Text style={{ fontSize: 11, color: colors.textMuted }}>{formatNoteTime(note.created_at)}</Text>
+        {moodOpt && (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <Text style={{ fontSize: 14 }}>{moodOpt.emoji}</Text>
+          </View>
+        )}
       </View>
-      <Text style={{ fontSize: 14, color: "#1f2937", lineHeight: 20 }}>{note.content}</Text>
+      <Text style={{ fontSize: 14, color: colors.textPrimary, lineHeight: 20 }}>{note.content}</Text>
     </Pressable>
   );
 }
@@ -145,8 +153,8 @@ export default function NotesScreen() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" }}>
-        <ActivityIndicator size="large" color="#4f46e5" />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -154,43 +162,46 @@ export default function NotesScreen() {
   if (isError) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ color: "#ef4444" }}>Error al cargar las notas.</Text>
+        <Text style={{ color: colors.danger }}>Error al cargar las notas.</Text>
       </View>
     );
   }
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "#f8fafc" }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={88}
+      style={{ flex: 1, backgroundColor: colors.surface }}
+      behavior={Platform.OS === "ios" ? "padding" : "padding"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
-      {/* Lista scrollable */}
       <SectionList
         style={{ flex: 1 }}
         sections={sections}
         keyExtractor={(item) => item.id}
         refreshControl={
-          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor="#4f46e5" />
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
-        contentContainerStyle={{ paddingBottom: 16 }}
+        contentContainerStyle={{ paddingBottom: spacing.lg }}
         ListHeaderComponent={
-          <View style={{ backgroundColor: "#f8fafc" }}>
+          <View style={{ backgroundColor: colors.surface }}>
             <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} />
             {sections.length === 0 && (
-              <View style={{ alignItems: "center", paddingTop: 48, paddingBottom: 20 }}>
-                <Text style={{ fontSize: 40, marginBottom: 12 }}>📝</Text>
-                <Text style={{ color: "#9ca3af", textAlign: "center" }}>Aún no tienes notas.</Text>
-                <Text style={{ color: "#9ca3af", fontSize: 12, textAlign: "center", marginTop: 4 }}>
-                  Escribe una en el campo de abajo.
+              <View style={{ alignItems: "center", paddingTop: 48, paddingBottom: 20, paddingHorizontal: 32 }}>
+                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primarySubtle, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                  <Text style={{ fontSize: 32 }}>📝</Text>
+                </View>
+                <Text style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary, textAlign: "center", marginBottom: 8 }}>
+                  Empieza a escribir
+                </Text>
+                <Text style={{ color: colors.textMuted, textAlign: "center", fontSize: 14, lineHeight: 20, marginBottom: 12 }}>
+                  Registra cómo te sentiste hoy. Tus notas te ayudarán a reconocer patrones con el tiempo.
                 </Text>
               </View>
             )}
           </View>
         }
         renderSectionHeader={({ section }) => (
-          <View style={{ backgroundColor: "#f0f4ff", paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#e5e7eb", marginTop: 8 }}>
-            <Text style={{ fontSize: 13, fontWeight: "600", color: "#4f46e5", textTransform: "capitalize" }}>
+          <View style={{ backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.cardBorder, marginTop: spacing.sm }}>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: colors.primary, textTransform: "capitalize" }}>
               {formatSectionDate(section.title)}
             </Text>
           </View>
@@ -200,50 +211,54 @@ export default function NotesScreen() {
         )}
       />
 
-      {/* Footer fijo — siempre visible sobre el teclado */}
       <View style={{
         borderTopWidth: 1,
-        borderTopColor: "#e5e7eb",
-        backgroundColor: "#ffffff",
-        paddingHorizontal: 16,
-        paddingTop: 10,
-        paddingBottom: Platform.OS === "ios" ? 24 : 12,
+        borderTopColor: colors.cardBorder,
+        backgroundColor: colors.white,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+        paddingBottom: Platform.OS === "ios" ? 24 : spacing.md,
+        ...shadows.subtle,
       }}>
         <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
-        <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-end" }}>
+        <View style={{ flexDirection: "row", gap: spacing.sm, alignItems: "flex-end" }}>
           <TextInput
             value={text}
             onChangeText={setText}
-            placeholder="Escribe una nota…"
-            placeholderTextColor="#9ca3af"
+            placeholder="¿Qué tienes en mente hoy?"
+            placeholderTextColor={colors.textMuted}
             multiline
             style={{
               flex: 1,
               borderWidth: 1,
-              borderColor: "#e5e7eb",
-              borderRadius: 12,
-              paddingHorizontal: 12,
+              borderColor: text ? colors.primary : colors.cardBorder,
+              borderRadius: radii.md,
+              paddingHorizontal: spacing.md,
               paddingVertical: 10,
-              fontSize: 13,
-              color: "#111827",
+              fontSize: 14,
+              color: colors.textPrimary,
               maxHeight: 100,
               textAlignVertical: "top",
-              backgroundColor: "#f9fafb",
+              backgroundColor: colors.white,
             }}
           />
           <Pressable
             onPress={handleAdd}
             disabled={createNote.isPending || !text.trim()}
             style={({ pressed }) => ({
-              backgroundColor: text.trim() ? "#4f46e5" : "#e5e7eb",
-              borderRadius: 12,
-              paddingHorizontal: 16,
-              paddingVertical: 12,
+              backgroundColor: text.trim() ? colors.primary : colors.gray200,
+              borderRadius: radii.md,
+              paddingHorizontal: spacing.md,
+              paddingVertical: 11,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            <Text style={{ color: text.trim() ? "#ffffff" : "#9ca3af", fontWeight: "700", fontSize: 14 }}>
-              ✓
+            <Send size={14} color={text.trim() ? colors.white : colors.textMuted} strokeWidth={2} />
+            <Text style={{ color: text.trim() ? colors.white : colors.textMuted, fontWeight: "700", fontSize: 13 }}>
+              Guardar
             </Text>
           </Pressable>
         </View>
