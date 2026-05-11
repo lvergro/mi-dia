@@ -2,6 +2,8 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   RefreshControl,
   SectionList,
@@ -56,7 +58,7 @@ function MiniMoodPicker({
   onSelect: (v: MoodValue | null) => void;
 }) {
   return (
-    <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
+    <View style={{ flexDirection: "row", gap: 6, marginBottom: 8 }}>
       {MOOD_OPTIONS.map((opt) => {
         const isSelected = selected === opt.value;
         return (
@@ -64,9 +66,9 @@ function MiniMoodPicker({
             key={opt.value}
             onPress={() => onSelect(isSelected ? null : opt.value)}
             style={({ pressed }) => ({
-              width: 40,
-              height: 40,
-              borderRadius: 20,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
               borderWidth: isSelected ? 2.5 : 1,
               borderColor: isSelected ? opt.color : "#e5e7eb",
               backgroundColor: isSelected ? `${opt.color}18` : "#f9fafb",
@@ -75,7 +77,7 @@ function MiniMoodPicker({
               opacity: pressed ? 0.75 : 1,
             })}
           >
-            <Text style={{ fontSize: 20 }}>{opt.emoji}</Text>
+            <Text style={{ fontSize: 18 }}>{opt.emoji}</Text>
           </Pressable>
         );
       })}
@@ -141,63 +143,6 @@ export default function NotesScreen() {
 
   const sections = groupByDate(allNotes);
 
-  const header = (
-    <View style={{ backgroundColor: "#f8fafc" }}>
-      <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} />
-
-      <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-        <Text style={{ fontSize: 13, fontWeight: "600", color: "#6b7280", marginBottom: 10 }}>
-          Nueva nota
-        </Text>
-        <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            placeholder="Escribe una nota…"
-            placeholderTextColor="#9ca3af"
-            multiline
-            style={{
-              flex: 1,
-              borderWidth: 1,
-              borderColor: "#e5e7eb",
-              borderRadius: 12,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              fontSize: 13,
-              color: "#111827",
-              minHeight: 60,
-              textAlignVertical: "top",
-              backgroundColor: "#ffffff",
-            }}
-          />
-          <Pressable
-            onPress={handleAdd}
-            disabled={createNote.isPending || !text.trim()}
-            style={({ pressed }) => ({
-              backgroundColor: text.trim() ? "#4f46e5" : "#e5e7eb",
-              borderRadius: 12,
-              paddingHorizontal: 14,
-              justifyContent: "center",
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Text style={{ color: text.trim() ? "#ffffff" : "#9ca3af", fontWeight: "600", fontSize: 13 }}>
-              + Agregar
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {sections.length === 0 && !isLoading && (
-        <View style={{ alignItems: "center", paddingTop: 32, paddingBottom: 20 }}>
-          <Text style={{ fontSize: 40, marginBottom: 12 }}>📝</Text>
-          <Text style={{ color: "#9ca3af", textAlign: "center" }}>Aún no tienes notas.</Text>
-        </View>
-      )}
-    </View>
-  );
-
   if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" }}>
@@ -215,25 +160,94 @@ export default function NotesScreen() {
   }
 
   return (
-    <SectionList
+    <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: "#f8fafc" }}
-      sections={sections}
-      keyExtractor={(item) => item.id}
-      refreshControl={
-        <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor="#4f46e5" />
-      }
-      contentContainerStyle={{ paddingBottom: 40 }}
-      ListHeaderComponent={header}
-      renderSectionHeader={({ section }) => (
-        <View style={{ backgroundColor: "#f0f4ff", paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#e5e7eb", marginTop: 8 }}>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: "#4f46e5", textTransform: "capitalize" }}>
-            {formatSectionDate(section.title)}
-          </Text>
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={88}
+    >
+      {/* Lista scrollable */}
+      <SectionList
+        style={{ flex: 1 }}
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor="#4f46e5" />
+        }
+        contentContainerStyle={{ paddingBottom: 16 }}
+        ListHeaderComponent={
+          <View style={{ backgroundColor: "#f8fafc" }}>
+            <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} />
+            {sections.length === 0 && (
+              <View style={{ alignItems: "center", paddingTop: 48, paddingBottom: 20 }}>
+                <Text style={{ fontSize: 40, marginBottom: 12 }}>📝</Text>
+                <Text style={{ color: "#9ca3af", textAlign: "center" }}>Aún no tienes notas.</Text>
+                <Text style={{ color: "#9ca3af", fontSize: 12, textAlign: "center", marginTop: 4 }}>
+                  Escribe una en el campo de abajo.
+                </Text>
+              </View>
+            )}
+          </View>
+        }
+        renderSectionHeader={({ section }) => (
+          <View style={{ backgroundColor: "#f0f4ff", paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#e5e7eb", marginTop: 8 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#4f46e5", textTransform: "capitalize" }}>
+              {formatSectionDate(section.title)}
+            </Text>
+          </View>
+        )}
+        renderItem={({ item }) => (
+          <NoteRow note={item} onDelete={() => handleDelete(item)} />
+        )}
+      />
+
+      {/* Footer fijo — siempre visible sobre el teclado */}
+      <View style={{
+        borderTopWidth: 1,
+        borderTopColor: "#e5e7eb",
+        backgroundColor: "#ffffff",
+        paddingHorizontal: 16,
+        paddingTop: 10,
+        paddingBottom: Platform.OS === "ios" ? 24 : 12,
+      }}>
+        <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
+        <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-end" }}>
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            placeholder="Escribe una nota…"
+            placeholderTextColor="#9ca3af"
+            multiline
+            style={{
+              flex: 1,
+              borderWidth: 1,
+              borderColor: "#e5e7eb",
+              borderRadius: 12,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              fontSize: 13,
+              color: "#111827",
+              maxHeight: 100,
+              textAlignVertical: "top",
+              backgroundColor: "#f9fafb",
+            }}
+          />
+          <Pressable
+            onPress={handleAdd}
+            disabled={createNote.isPending || !text.trim()}
+            style={({ pressed }) => ({
+              backgroundColor: text.trim() ? "#4f46e5" : "#e5e7eb",
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <Text style={{ color: text.trim() ? "#ffffff" : "#9ca3af", fontWeight: "700", fontSize: 14 }}>
+              ✓
+            </Text>
+          </Pressable>
         </View>
-      )}
-      renderItem={({ item }) => (
-        <NoteRow note={item} onDelete={() => handleDelete(item)} />
-      )}
-    />
+      </View>
+    </KeyboardAvoidingView>
   );
 }
