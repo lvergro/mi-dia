@@ -16,16 +16,17 @@ import { useRouter } from "expo-router";
 import { useChecklist } from "../../hooks/useChecklist";
 import { useCreateLog, useDeleteLog } from "../../hooks/useLogMutations";
 import { useMood } from "../../hooks/useMood";
-import { useNotesForDate, useCreateNote, useDeleteNote } from "../../hooks/useNotes";
-import { MoodCard } from "../../components/mood/MoodCard";
 import type { ItemWithStatus, ItemBlock } from "@mi-dia/core";
-import type { DailyNote } from "@mi-dia/types";
 
 const BLOCK_ORDER: ItemBlock[] = ["mañana", "tarde", "noche"];
 const BLOCK_LABEL: Record<ItemBlock, string> = {
   mañana: "Mañana",
   tarde: "Tarde",
   noche: "Noche",
+};
+
+const MOOD_EMOJI: Record<number, string> = {
+  1: "😢", 2: "😕", 3: "😐", 4: "🙂", 5: "😄",
 };
 
 function getTodayLocal(): string {
@@ -48,13 +49,6 @@ function formatDisplayDate(dateStr: string): string {
 
 function formatTime(specificTime: string): string {
   return specificTime.slice(0, 5);
-}
-
-function formatNoteTime(isoString: string): string {
-  const d = new Date(isoString);
-  const h = d.getHours().toString().padStart(2, "0");
-  const m = d.getMinutes().toString().padStart(2, "0");
-  return `${h}:${m}`;
 }
 
 interface ChecklistItemCardProps {
@@ -123,105 +117,6 @@ function ChecklistItemCard({ item, onTap, isPending }: ChecklistItemCardProps) {
   );
 }
 
-interface DayNotesSectionProps {
-  date: string;
-  readonly: boolean;
-}
-
-function DayNotesSection({ date, readonly }: DayNotesSectionProps) {
-  const { data: notes = [] } = useNotesForDate(date);
-  const createNote = useCreateNote(date);
-  const deleteNoteM = useDeleteNote(date);
-  const [text, setText] = useState("");
-
-  function handleAdd() {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    createNote.mutate(trimmed, { onSuccess: () => setText("") });
-  }
-
-  function handleDelete(note: DailyNote) {
-    Alert.alert("Eliminar nota", "¿Eliminar esta nota?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Eliminar", style: "destructive", onPress: () => deleteNoteM.mutate(note.id) },
-    ]);
-  }
-
-  return (
-    <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-      <Text style={{ fontSize: 13, fontWeight: "600", color: "#6b7280", marginBottom: 10 }}>
-        Notas del día
-      </Text>
-
-      {!readonly && (
-        <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            placeholder="Escribe una nota…"
-            placeholderTextColor="#9ca3af"
-            multiline
-            style={{
-              flex: 1,
-              borderWidth: 1,
-              borderColor: "#e5e7eb",
-              borderRadius: 12,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              fontSize: 13,
-              color: "#111827",
-              minHeight: 60,
-              textAlignVertical: "top",
-              backgroundColor: "#ffffff",
-            }}
-          />
-          <Pressable
-            onPress={handleAdd}
-            disabled={createNote.isPending || !text.trim()}
-            style={({ pressed }) => ({
-              backgroundColor: text.trim() ? "#4f46e5" : "#e5e7eb",
-              borderRadius: 12,
-              paddingHorizontal: 14,
-              justifyContent: "center",
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Text style={{ color: text.trim() ? "#ffffff" : "#9ca3af", fontWeight: "600", fontSize: 13 }}>
-              + Agregar
-            </Text>
-          </Pressable>
-        </View>
-      )}
-
-      {notes.length === 0 && (
-        <Text style={{ fontSize: 12, color: "#9ca3af", fontStyle: "italic" }}>
-          {readonly ? "Sin notas para este día" : "Aún no hay notas para hoy"}
-        </Text>
-      )}
-
-      {notes.map((note) => (
-        <Pressable
-          key={note.id}
-          onLongPress={() => { if (!readonly) handleDelete(note); }}
-          style={{
-            backgroundColor: "#f9fafb",
-            borderRadius: 10,
-            borderWidth: 1,
-            borderColor: "#e5e7eb",
-            padding: 12,
-            marginBottom: 8,
-          }}
-        >
-          <Text style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>
-            {formatNoteTime(note.created_at)}
-          </Text>
-          <Text style={{ fontSize: 13, color: "#374151" }}>{note.content}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 export default function MiDiaScreen() {
   const router = useRouter();
   const todayStr = getTodayLocal();
@@ -229,11 +124,9 @@ export default function MiDiaScreen() {
   const isToday = viewDate === todayStr;
 
   const { data: checklist, isLoading, error, refetch, isFetching } = useChecklist(viewDate);
-
   const createLog = useCreateLog(viewDate);
   const deleteLog = useDeleteLog(viewDate);
-
-  const { mood, setMood, isSaving: isMoodSaving } = useMood(viewDate);
+  const { mood } = useMood(viewDate);
 
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
@@ -264,10 +157,7 @@ export default function MiDiaScreen() {
                   completed_at: new Date().toISOString(),
                   note: null,
                 },
-                {
-                  onError: () =>
-                    Alert.alert("Error", "No se pudo guardar el cambio."),
-                },
+                { onError: () => Alert.alert("Error", "No se pudo guardar el cambio.") },
               );
             },
           },
@@ -292,8 +182,7 @@ export default function MiDiaScreen() {
             onPress: () => {
               if (item.log) {
                 deleteLog.mutate(item.log.id, {
-                  onError: () =>
-                    Alert.alert("Error", "No se pudo revertir el cambio."),
+                  onError: () => Alert.alert("Error", "No se pudo revertir el cambio."),
                 });
               }
             },
@@ -341,6 +230,15 @@ export default function MiDiaScreen() {
     );
   }
 
+  const moodBanner = (
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingBottom: 8 }}>
+      <Text style={{ fontSize: 12, color: "#9ca3af" }}>¿Cómo te sientes hoy?</Text>
+      <Text style={{ fontSize: 22 }}>
+        {mood ? MOOD_EMOJI[mood] : "○"}
+      </Text>
+    </View>
+  );
+
   const dateNavBar = (
     <View className="flex-row items-center justify-between px-4 pt-4 pb-2">
       <Pressable
@@ -380,14 +278,12 @@ export default function MiDiaScreen() {
         }
       >
         {dateNavBar}
-        <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} readonly={!isToday} />
+        {moodBanner}
         <View className="items-center px-8 pt-8 pb-8">
           {isToday ? (
             <>
               <Text className="text-5xl mb-4">☀️</Text>
-              <Text className="text-xl font-bold text-gray-900 text-center mb-2">
-                Tu día está vacío
-              </Text>
+              <Text className="text-xl font-bold text-gray-900 text-center mb-2">Tu día está vacío</Text>
               <Text className="text-sm text-muted text-center mb-8">
                 Agrega medicamentos y actividades en la pestaña Medicamentos
               </Text>
@@ -401,13 +297,10 @@ export default function MiDiaScreen() {
           ) : (
             <>
               <Text className="text-5xl mb-4">📭</Text>
-              <Text className="text-base text-gray-500 text-center">
-                Sin registros para este día
-              </Text>
+              <Text className="text-base text-gray-500 text-center">Sin registros para este día</Text>
             </>
           )}
         </View>
-        <DayNotesSection date={viewDate} readonly={!isToday} />
       </ScrollView>
     );
   }
@@ -422,14 +315,12 @@ export default function MiDiaScreen() {
         }
       >
         {dateNavBar}
+        {moodBanner}
         {!isToday && (
           <View className="mx-4 mb-2 px-3 py-2 bg-amber-50 rounded-xl border border-amber-100">
-            <Text className="text-xs text-amber-700 text-center">
-              Modo lectura — día pasado
-            </Text>
+            <Text className="text-xs text-amber-700 text-center">Modo lectura — día pasado</Text>
           </View>
         )}
-        <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} readonly={!isToday} />
         {BLOCK_ORDER.map((block) => (
           <View key={block} className="mx-4 mb-4 bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <View className="px-4 pt-4 pb-2">
@@ -453,7 +344,6 @@ export default function MiDiaScreen() {
             </View>
           </View>
         ))}
-        <DayNotesSection date={viewDate} readonly={!isToday} />
       </ScrollView>
 
       <Modal
@@ -467,9 +357,7 @@ export default function MiDiaScreen() {
           className="flex-1 justify-end"
         >
           <View className="bg-white rounded-t-2xl p-6">
-            <Text className="text-lg font-semibold text-gray-900 mb-1">
-              Motivo de omisión
-            </Text>
+            <Text className="text-lg font-semibold text-gray-900 mb-1">Motivo de omisión</Text>
             <Text className="text-sm text-gray-500 mb-4">Opcional</Text>
             <TextInput
               value={noteText}
@@ -483,10 +371,7 @@ export default function MiDiaScreen() {
             <View className="flex-row gap-3">
               <Pressable
                 className="flex-1 border border-gray-200 rounded-xl py-3 items-center"
-                onPress={() => {
-                  setNoteModalVisible(false);
-                  setPendingOmitItem(null);
-                }}
+                onPress={() => { setNoteModalVisible(false); setPendingOmitItem(null); }}
               >
                 <Text className="text-gray-700 font-medium">Cancelar</Text>
               </Pressable>
