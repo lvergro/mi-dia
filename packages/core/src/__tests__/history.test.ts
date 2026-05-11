@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildHistory } from "../history.js";
+import { buildHistory, buildHistoryRange } from "../history.js";
 import type { Item, Log } from "@mi-dia/types";
 
 function makeItem(overrides: Partial<Item> = {}): Item {
@@ -143,5 +143,71 @@ describe("buildHistory", () => {
     expect(result[0].total).toBe(3);
     expect(result[0].done).toBe(1);
     expect(result[0].pct).toBe(33); // Math.round(1/3*100) = 33
+  });
+});
+
+describe("buildHistoryRange", () => {
+  it("rango de 1 día con log done → pct=100", () => {
+    const items = [makeItem()];
+    const logs = [makeLog({ date: TODAY, status: "done" })];
+    const result = buildHistoryRange(items, logs, TODAY, TODAY);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].date).toBe(TODAY);
+    expect(result[0].pct).toBe(100);
+    expect(result[0].done).toBe(1);
+  });
+
+  it("rango de 3 días → orden descendente", () => {
+    const START = "2026-05-07";
+    const END = "2026-05-09";
+    const items = [makeItem()];
+    const result = buildHistoryRange(items, [], START, END);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].date).toBe("2026-05-09");
+    expect(result[1].date).toBe("2026-05-08");
+    expect(result[2].date).toBe("2026-05-07");
+  });
+
+  it("días sin ítems activos se omiten del resultado", () => {
+    // item solo los miércoles (schemaDay=3), rango 7 días hasta 2026-05-09
+    const items = [makeItem({ recurrence_type: "specific_days", recurrence_days: [3] })];
+    const result = buildHistoryRange(items, [], "2026-05-03", TODAY);
+
+    // Solo 2026-05-06 (miércoles) y 2026-05-03 (domingo? no — 3 = miércoles)
+    // 2026-05-03 = domingo → no aparece; 2026-05-06 = miércoles → aparece
+    expect(result).toHaveLength(1);
+    expect(result[0].date).toBe("2026-05-06");
+  });
+
+  it("item soft-deleted excluido de todo el rango", () => {
+    const items = [makeItem({ deleted_at: "2026-05-01T00:00:00Z" })];
+    const result = buildHistoryRange(items, [], "2026-05-01", TODAY);
+    expect(result).toHaveLength(0);
+  });
+
+  it("sin logs → todos pending, pct=0", () => {
+    const items = [makeItem()];
+    const result = buildHistoryRange(items, [], TODAY, TODAY);
+    expect(result[0].items[0].status).toBe("pending");
+    expect(result[0].pct).toBe(0);
+  });
+
+  it("múltiples items con logs parciales → pct correcto", () => {
+    const item1 = makeItem({ id: "item-1" });
+    const item2 = makeItem({ id: "item-2", name: "Vitamina C" });
+    const logs = [makeLog({ item_id: "item-1", date: TODAY, status: "done" })];
+    const result = buildHistoryRange([item1, item2], logs, TODAY, TODAY);
+
+    expect(result[0].total).toBe(2);
+    expect(result[0].done).toBe(1);
+    expect(result[0].pct).toBe(50);
+  });
+
+  it("startDate === endDate → exactamente 1 día en resultado si tiene items", () => {
+    const items = [makeItem()];
+    const result = buildHistoryRange(items, [], TODAY, TODAY);
+    expect(result).toHaveLength(1);
   });
 });
