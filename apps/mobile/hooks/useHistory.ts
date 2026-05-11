@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchHistoryData } from "@mi-dia/database";
-import { buildHistory } from "@mi-dia/core";
+import { fetchHistoryDataRange, getFirstLogDate } from "@mi-dia/database";
+import { buildHistoryRange } from "@mi-dia/core";
 import type { DayHistory } from "@mi-dia/core";
 
 function getTodayLocal(): string {
@@ -9,13 +9,15 @@ function getTodayLocal(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function useHistory(range: 7 | 30 = 30) {
+export function useHistory() {
   return useQuery<DayHistory[]>({
-    queryKey: ["history", range],
+    queryKey: ["history", "full"],
     queryFn: async () => {
-      const { items, logs } = await fetchHistoryData(range);
       const today = getTodayLocal();
-      return buildHistory(items, logs, range, today);
+      const firstDate = await getFirstLogDate();
+      if (!firstDate) return [];
+      const { items, logs } = await fetchHistoryDataRange(firstDate, today);
+      return buildHistoryRange(items, logs, firstDate, today);
     },
   });
 }

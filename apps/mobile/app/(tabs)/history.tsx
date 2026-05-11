@@ -12,8 +12,6 @@ import {
 import { useHistory } from "../../hooks/useHistory";
 import type { DayHistory, DayHistoryItem, DayItemStatus } from "@mi-dia/core";
 
-const RANGE_OPTIONS: (7 | 30)[] = [7, 30];
-
 function pctColor(pct: number): string {
   if (pct >= 80) return "#22c55e";
   if (pct >= 50) return "#f59e0b";
@@ -76,14 +74,14 @@ function ItemRow({ item }: { item: DayHistoryItem }) {
 }
 
 export default function HistoryScreen() {
-  const [range, setRange] = useState<7 | 30>(30);
   const [selected, setSelected] = useState<DayHistory | null>(null);
-  const { data, isLoading, isError, refetch, isFetching } = useHistory(range);
+  const { data, isLoading, isError, refetch, isFetching } = useHistory();
 
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" />
+        <Text className="text-gray-400 text-sm mt-3">Cargando historial completo...</Text>
       </View>
     );
   }
@@ -98,25 +96,10 @@ export default function HistoryScreen() {
 
   return (
     <View className="flex-1 bg-white">
-      {/* Toggle rango */}
-      <View className="flex-row justify-center gap-2 pt-4 pb-2">
-        {RANGE_OPTIONS.map((r) => (
-          <TouchableOpacity
-            key={r}
-            onPress={() => setRange(r)}
-            className={`px-4 py-2 rounded-full ${range === r ? "bg-blue-600" : "bg-gray-100"}`}
-          >
-            <Text className={range === r ? "text-white font-semibold" : "text-gray-700"}>
-              {r} días
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Lista */}
       {!data || data.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-gray-400">Sin historial para este rango.</Text>
+        <View className="flex-1 items-center justify-center px-8">
+          <Text className="text-5xl mb-4">📭</Text>
+          <Text className="text-gray-400 text-center">No tienes registros aún.</Text>
         </View>
       ) : (
         <FlatList
@@ -129,7 +112,6 @@ export default function HistoryScreen() {
         />
       )}
 
-      {/* Modal detalle */}
       <Modal
         visible={selected !== null}
         animationType="slide"

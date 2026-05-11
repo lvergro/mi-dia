@@ -24,8 +24,22 @@ const BLOCK_LABEL: Record<ItemBlock, string> = {
   noche: "Noche",
 };
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
+function getTodayLocal(): string {
+  const d = new Date();
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function formatDisplayDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" });
 }
 
 function formatTime(specificTime: string): string {
@@ -100,22 +114,20 @@ function ChecklistItemCard({ item, onTap, isPending }: ChecklistItemCardProps) {
 
 export default function MiDiaScreen() {
   const router = useRouter();
-  const date = today();
+  const todayStr = getTodayLocal();
+  const [viewDate, setViewDate] = useState<string>(todayStr);
+  const isToday = viewDate === todayStr;
 
-  const { data: checklist, isLoading, error, refetch, isFetching } = useChecklist(date);
+  const { data: checklist, isLoading, error, refetch, isFetching } = useChecklist(viewDate);
 
-  const createLog = useCreateLog(date);
-  const deleteLog = useDeleteLog(date);
+  const createLog = useCreateLog(viewDate);
+  const deleteLog = useDeleteLog(viewDate);
 
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [pendingOmitItem, setPendingOmitItem] = useState<ItemWithStatus | null>(null);
 
-  const displayDate = new Date().toLocaleDateString("es", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const displayDate = formatDisplayDate(viewDate);
 
   const totalItems = BLOCK_ORDER.reduce(
     (sum, block) => sum + checklist[block].length,
@@ -123,6 +135,7 @@ export default function MiDiaScreen() {
   );
 
   function handleItemTap(item: ItemWithStatus): void {
+    if (!isToday) return; // solo lectura en días pasados
     if (item.status === "pending") {
       Alert.alert(
         item.name,
@@ -134,7 +147,7 @@ export default function MiDiaScreen() {
               createLog.mutate(
                 {
                   item_id: item.id,
-                  date,
+                  date: viewDate,
                   status: "done",
                   completed_at: new Date().toISOString(),
                   note: null,
@@ -184,7 +197,7 @@ export default function MiDiaScreen() {
     createLog.mutate(
       {
         item_id: pendingOmitItem.id,
-        date,
+        date: viewDate,
         status: "omitted",
         completed_at: new Date().toISOString(),
         note: noteText.trim() || null,
@@ -216,28 +229,71 @@ export default function MiDiaScreen() {
     );
   }
 
+  const dateNavBar = (
+    <View className="flex-row items-center justify-between px-4 pt-4 pb-2">
+      <Pressable
+        onPress={() => setViewDate(addDays(viewDate, -1))}
+        className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+        hitSlop={8}
+      >
+        <Text className="text-gray-700 text-lg">‹</Text>
+      </Pressable>
+      <View className="flex-1 items-center">
+        <Text className="text-2xl font-bold text-gray-900">Mi Día</Text>
+        <Text className="text-xs text-muted capitalize mt-0.5">{displayDate}</Text>
+        {!isToday && (
+          <Pressable onPress={() => setViewDate(todayStr)} hitSlop={6}>
+            <Text className="text-xs text-primary mt-1 font-medium">Volver a hoy</Text>
+          </Pressable>
+        )}
+      </View>
+      <Pressable
+        onPress={() => { if (!isToday) setViewDate(addDays(viewDate, 1)); }}
+        className={`w-10 h-10 items-center justify-center rounded-full ${isToday ? "bg-gray-50" : "bg-gray-100"}`}
+        hitSlop={8}
+        disabled={isToday}
+      >
+        <Text className={`text-lg ${isToday ? "text-gray-300" : "text-gray-700"}`}>›</Text>
+      </Pressable>
+    </View>
+  );
+
   if (totalItems === 0) {
     return (
       <ScrollView
         className="flex-1 bg-surface"
-        contentContainerStyle={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 0 }}
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
         }
       >
-        <Text className="text-5xl mb-4">☀️</Text>
-        <Text className="text-xl font-bold text-gray-900 text-center mb-2">
-          Tu día está vacío
-        </Text>
-        <Text className="text-sm text-muted text-center mb-8">
-          Agrega medicamentos y actividades en la pestaña Medicamentos
-        </Text>
-        <Pressable
-          className="bg-primary rounded-2xl px-8 py-4"
-          onPress={() => router.navigate("/(tabs)/medications")}
-        >
-          <Text className="text-white font-semibold text-base">Ir a Medicamentos</Text>
-        </Pressable>
+        {dateNavBar}
+        <View className="flex-1 items-center justify-center px-8 pt-16">
+          {isToday ? (
+            <>
+              <Text className="text-5xl mb-4">☀️</Text>
+              <Text className="text-xl font-bold text-gray-900 text-center mb-2">
+                Tu día está vacío
+              </Text>
+              <Text className="text-sm text-muted text-center mb-8">
+                Agrega medicamentos y actividades en la pestaña Medicamentos
+              </Text>
+              <Pressable
+                className="bg-primary rounded-2xl px-8 py-4"
+                onPress={() => router.navigate("/(tabs)/medications")}
+              >
+                <Text className="text-white font-semibold text-base">Ir a Medicamentos</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text className="text-5xl mb-4">📭</Text>
+              <Text className="text-base text-gray-500 text-center">
+                Sin registros para este día
+              </Text>
+            </>
+          )}
+        </View>
       </ScrollView>
     );
   }
@@ -251,11 +307,14 @@ export default function MiDiaScreen() {
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
         }
       >
-        <View className="px-4 pt-6 pb-4">
-          <Text className="text-2xl font-bold text-gray-900">Mi Día</Text>
-          <Text className="text-sm text-muted capitalize mt-0.5">{displayDate}</Text>
-        </View>
-
+        {dateNavBar}
+        {!isToday && (
+          <View className="mx-4 mb-2 px-3 py-2 bg-amber-50 rounded-xl border border-amber-100">
+            <Text className="text-xs text-amber-700 text-center">
+              Modo lectura — día pasado
+            </Text>
+          </View>
+        )}
         {BLOCK_ORDER.map((block) => (
           <View key={block} className="mx-4 mb-4 bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <View className="px-4 pt-4 pb-2">
