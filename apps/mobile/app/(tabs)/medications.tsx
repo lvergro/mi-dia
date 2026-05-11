@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -6,27 +6,27 @@ import {
   Pressable,
   RefreshControl,
   Text,
+  TextInput,
   View,
+  ActionSheetIOS,
+  Platform,
 } from "react-native";
-import { Edit2, Trash2 } from "lucide-react-native";
+import { Activity, Pill, Search } from "lucide-react-native";
 import type { Item } from "@mi-dia/types";
 import { ItemForm, type ItemFormValues } from "../../components/item/ItemForm";
 import { useItems } from "../../hooks/useItems";
-import {
-  useCreateItem,
-  useUpdateItem,
-  useSoftDeleteItem,
-} from "../../hooks/useItemMutations";
-import { colors, radii, shadows, spacing } from "../../theme";
+import { useCreateItem, useUpdateItem, useSoftDeleteItem } from "../../hooks/useItemMutations";
+import { colors, radii, spacing } from "../../theme";
 
-function getTimeBlock(specificTime: string): "mañana" | "tarde" | "noche" {
+type FilterTab = "all" | "medication" | "activity";
+type TimeBlockKey = "mañana" | "tarde" | "noche";
+
+function getTimeBlock(specificTime: string): TimeBlockKey {
   const [h] = specificTime.split(":").map(Number);
   if (h >= 6 && h < 14) return "mañana";
   if (h >= 14 && h < 20) return "tarde";
   return "noche";
 }
-
-type TimeBlockKey = "mañana" | "tarde" | "noche";
 
 interface GroupedItems {
   mañana: Item[];
@@ -49,6 +49,30 @@ const RECURRENCE_LABEL: Record<string, string> = {
 
 const DAY_NAMES = ["", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
+function ItemIcon({ type }: { type: string }) {
+  const isMed = type === "medication";
+  return (
+    <View
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: isMed ? colors.successLight : "#ffedd5",
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 10,
+        flexShrink: 0,
+      }}
+    >
+      {isMed ? (
+        <Pill size={20} color={colors.success} strokeWidth={1.8} />
+      ) : (
+        <Activity size={20} color="#ea580c" strokeWidth={1.8} />
+      )}
+    </View>
+  );
+}
+
 interface ItemCardProps {
   item: Item;
   onEdit: (item: Item) => void;
@@ -57,78 +81,101 @@ interface ItemCardProps {
 
 function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
   const isMed = item.type === "medication";
+
+  function showMenu() {
+    if (Platform.OS === "ios") {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: ["Cancelar", "Editar", "Eliminar"], cancelButtonIndex: 0, destructiveButtonIndex: 2 },
+        (idx) => {
+          if (idx === 1) onEdit(item);
+          if (idx === 2) onDelete(item);
+        },
+      );
+    } else {
+      Alert.alert(item.name, undefined, [
+        { text: "Editar", onPress: () => onEdit(item) },
+        { text: "Eliminar", style: "destructive", onPress: () => onDelete(item) },
+        { text: "Cancelar", style: "cancel" },
+      ]);
+    }
+  }
+
   return (
     <View
       style={{
         backgroundColor: colors.white,
         borderRadius: radii.lg,
-        paddingHorizontal: spacing.lg,
+        paddingHorizontal: spacing.md,
         paddingVertical: spacing.md,
         marginBottom: spacing.sm,
         borderWidth: 1,
         borderColor: colors.cardBorder,
         flexDirection: "row",
         alignItems: "center",
-        ...shadows.subtle,
       }}
     >
+      <ItemIcon type={item.type} />
+
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 3 }}>
-          <Text style={{ fontSize: 15, fontWeight: "600", color: colors.textPrimary }}>{item.name}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
+          <Text style={{ fontSize: 14, fontWeight: "600", color: colors.textPrimary }}>{item.name}</Text>
           <View
             style={{
               borderRadius: radii.full,
               paddingHorizontal: 7,
               paddingVertical: 2,
-              backgroundColor: isMed ? colors.infoSubtle : colors.primarySubtle,
+              backgroundColor: isMed ? colors.successLight : "#ffedd5",
             }}
           >
-            <Text style={{ fontSize: 10, fontWeight: "600", color: isMed ? colors.info : colors.primary }}>
-              {isMed ? "Med" : "Act"}
+            <Text style={{ fontSize: 10, fontWeight: "600", color: isMed ? colors.success : "#ea580c" }}>
+              {isMed ? "Medicamento" : "Actividad"}
             </Text>
           </View>
         </View>
-        {item.dose ? (
-          <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 2 }}>{item.dose}</Text>
-        ) : null}
-        <Text style={{ fontSize: 12, color: colors.textMuted }}>
-          {item.specific_time.slice(0, 5)}
-          {" · "}
-          {RECURRENCE_LABEL[item.recurrence_type]}
-          {item.recurrence_type === "specific_days" && item.recurrence_days
-            ? ` · ${item.recurrence_days.map((d) => DAY_NAMES[d]).join(" ")}`
-            : ""}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flexWrap: "wrap" }}>
+          <Text style={{ fontSize: 12, color: colors.textMuted }}>{item.specific_time.slice(0, 5)}</Text>
+          {item.dose ? (
+            <>
+              <Text style={{ fontSize: 12, color: colors.textMuted }}>·</Text>
+              <Text style={{ fontSize: 12, color: colors.textMuted }}>{item.dose}</Text>
+            </>
+          ) : null}
+          <Text style={{ fontSize: 12, color: colors.textMuted }}>·</Text>
+          <Text style={{ fontSize: 12, color: colors.textMuted }}>
+            {RECURRENCE_LABEL[item.recurrence_type]}
+            {item.recurrence_type === "specific_days" && item.recurrence_days
+              ? ` · ${item.recurrence_days.map((d) => DAY_NAMES[d]).join(" ")}`
+              : ""}
+          </Text>
+        </View>
       </View>
 
-      <View style={{ flexDirection: "row", gap: 4, marginLeft: spacing.sm }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginLeft: spacing.sm }}>
         <Pressable
           onPress={() => onEdit(item)}
           style={({ pressed }) => ({
-            width: 36,
-            height: 36,
-            borderRadius: radii.md,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            borderRadius: radii.sm,
             backgroundColor: pressed ? colors.primarySubtle : colors.gray100,
-            alignItems: "center",
-            justifyContent: "center",
           })}
           hitSlop={4}
         >
-          <Edit2 size={16} color={colors.textSecondary} strokeWidth={1.8} />
+          <Text style={{ fontSize: 13, color: colors.primary, fontWeight: "500" }}>Editar</Text>
         </Pressable>
         <Pressable
-          onPress={() => onDelete(item)}
+          onPress={showMenu}
           style={({ pressed }) => ({
-            width: 36,
-            height: 36,
-            borderRadius: radii.md,
-            backgroundColor: pressed ? colors.dangerSubtle : colors.gray100,
+            width: 32,
+            height: 32,
+            borderRadius: radii.sm,
+            backgroundColor: pressed ? colors.gray200 : colors.gray100,
             alignItems: "center",
             justifyContent: "center",
           })}
           hitSlop={4}
         >
-          <Trash2 size={16} color={colors.danger} strokeWidth={1.8} />
+          <Text style={{ fontSize: 16, color: colors.textSecondary, lineHeight: 18 }}>···</Text>
         </Pressable>
       </View>
     </View>
@@ -149,6 +196,8 @@ export default function MedicationsScreen() {
 
   const [formVisible, setFormVisible] = useState(false);
   const [editing, setEditing] = useState<Item | null>(null);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<FilterTab>("all");
 
   function openCreate() {
     setEditing(null);
@@ -161,18 +210,10 @@ export default function MedicationsScreen() {
   }
 
   function handleDelete(item: Item) {
-    Alert.alert(
-      "Eliminar ítem",
-      `¿Seguro que deseas eliminar "${item.name}"?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => deleteMutation.mutate(item.id),
-        },
-      ]
-    );
+    Alert.alert("Eliminar ítem", `¿Seguro que deseas eliminar "${item.name}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Eliminar", style: "destructive", onPress: () => deleteMutation.mutate(item.id) },
+    ]);
   }
 
   function handleFormSubmit(values: ItemFormValues) {
@@ -182,8 +223,7 @@ export default function MedicationsScreen() {
       dose: values.dose || null,
       specific_time: values.specific_time + ":00",
       recurrence_type: values.recurrence_type,
-      recurrence_days:
-        values.recurrence_type === "daily" ? null : values.recurrence_days,
+      recurrence_days: values.recurrence_type === "daily" ? null : values.recurrence_days,
     };
 
     function handleError(error: Error & { code?: string }) {
@@ -195,44 +235,145 @@ export default function MedicationsScreen() {
     }
 
     if (editing) {
-      updateMutation.mutate(
-        { id: editing.id, data: payload },
-        { onSuccess: () => setFormVisible(false), onError: handleError }
-      );
+      updateMutation.mutate({ id: editing.id, data: payload }, { onSuccess: () => setFormVisible(false), onError: handleError });
     } else {
-      createMutation.mutate(payload, {
-        onSuccess: () => setFormVisible(false),
-        onError: handleError,
-      });
+      createMutation.mutate(payload, { onSuccess: () => setFormVisible(false), onError: handleError });
     }
   }
 
-  const grouped = groupItems(items);
+  const filtered = useMemo(() => {
+    let result = items;
+    if (filter !== "all") result = result.filter((i) => i.type === filter);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter((i) => i.name.toLowerCase().includes(q));
+    }
+    return result;
+  }, [items, filter, search]);
+
+  const grouped = groupItems(filtered);
   const sections: SectionData[] = [
-    { title: "Mañana", key: "mañana", items: grouped.mañana },
-    { title: "Tarde", key: "tarde", items: grouped.tarde },
-    { title: "Noche", key: "noche", items: grouped.noche },
+    { title: "MAÑANA", key: "mañana", items: grouped.mañana },
+    { title: "TARDE", key: "tarde", items: grouped.tarde },
+    { title: "NOCHE", key: "noche", items: grouped.noche },
   ];
 
-  const isMutating =
-    createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+  const isMutating = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  const TABS: { key: FilterTab; label: string }[] = [
+    { key: "all", label: "Todos" },
+    { key: "medication", label: "Medicamentos" },
+    { key: "activity", label: "Actividades" },
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface }}>
-      <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.xl, paddingBottom: spacing.sm, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ fontSize: 22, fontWeight: "700", color: colors.textPrimary }}>Rutina</Text>
+      {/* Header */}
+      <View
+        style={{
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.xl,
+          paddingBottom: spacing.sm,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          backgroundColor: colors.white,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.cardBorder,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 22, fontWeight: "700", color: colors.textPrimary }}>Rutina</Text>
+          <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
+            Organiza tus medicamentos y actividades
+          </Text>
+        </View>
         <Pressable
           style={({ pressed }) => ({
             backgroundColor: pressed ? colors.primaryDark : colors.primary,
             borderRadius: radii.md,
             paddingHorizontal: spacing.md,
             paddingVertical: 8,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
+            marginTop: 2,
           })}
           onPress={openCreate}
           disabled={isMutating}
         >
-          <Text style={{ color: colors.white, fontWeight: "600", fontSize: 14 }}>+ Nuevo</Text>
+          <Text style={{ color: colors.white, fontWeight: "600", fontSize: 14 }}>+ Nuevo ítem</Text>
         </Pressable>
+      </View>
+
+      {/* Search bar */}
+      <View
+        style={{
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.md,
+          paddingBottom: spacing.sm,
+          backgroundColor: colors.white,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: colors.gray100,
+            borderRadius: radii.lg,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            gap: 8,
+          }}
+        >
+          <Search size={16} color={colors.textMuted} strokeWidth={1.8} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Buscar ítem..."
+            placeholderTextColor={colors.textMuted}
+            style={{ flex: 1, fontSize: 14, color: colors.textPrimary, padding: 0 }}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+          />
+        </View>
+      </View>
+
+      {/* Filter tabs */}
+      <View
+        style={{
+          flexDirection: "row",
+          paddingHorizontal: spacing.lg,
+          paddingBottom: spacing.md,
+          backgroundColor: colors.white,
+          gap: 8,
+        }}
+      >
+        {TABS.map((tab) => {
+          const active = filter === tab.key;
+          return (
+            <Pressable
+              key={tab.key}
+              onPress={() => setFilter(tab.key)}
+              style={{
+                paddingHorizontal: 14,
+                paddingVertical: 7,
+                borderRadius: radii.full,
+                backgroundColor: active ? colors.success : colors.gray100,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: active ? "600" : "400",
+                  color: active ? colors.white : colors.textSecondary,
+                }}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       {isLoading ? (
@@ -248,37 +389,57 @@ export default function MedicationsScreen() {
         <FlatList
           data={sections}
           keyExtractor={(section) => section.key}
-          contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: 4, paddingBottom: spacing.xl }}
+          contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl }}
           refreshControl={
-            <RefreshControl
-              refreshing={isFetching && !isLoading}
-              onRefresh={refetch}
-              tintColor={colors.primary}
-            />
+            <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor={colors.primary} />
           }
           renderItem={({ item: section }) =>
             section.items.length === 0 ? null : (
               <View style={{ marginBottom: spacing.lg }}>
-                <Text style={{ fontSize: 11, fontWeight: "700", color: colors.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: spacing.sm }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: colors.textMuted,
+                    letterSpacing: 0.8,
+                    marginBottom: spacing.sm,
+                    marginLeft: 4,
+                  }}
+                >
                   {section.title}
                 </Text>
                 {section.items.map((item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
-                  />
+                  <ItemCard key={item.id} item={item} onEdit={openEdit} onDelete={handleDelete} />
                 ))}
               </View>
             )
           }
           ListEmptyComponent={
             items.length === 0 ? (
-              <View style={{ backgroundColor: colors.white, borderRadius: radii.xl, padding: 28, borderWidth: 1, borderColor: colors.cardBorder, alignItems: "center", marginTop: spacing.xl }}>
+              <View
+                style={{
+                  backgroundColor: colors.white,
+                  borderRadius: radii.xl,
+                  padding: 28,
+                  borderWidth: 1,
+                  borderColor: colors.cardBorder,
+                  alignItems: "center",
+                  marginTop: spacing.xl,
+                }}
+              >
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>💊</Text>
-                <Text style={{ fontSize: 16, fontWeight: "600", color: colors.textPrimary, marginBottom: 6 }}>Sin rutina configurada</Text>
-                <Text style={{ color: colors.textMuted, textAlign: "center", fontSize: 14, marginBottom: 20, lineHeight: 20 }}>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: colors.textPrimary, marginBottom: 6 }}>
+                  Sin rutina configurada
+                </Text>
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    textAlign: "center",
+                    fontSize: 14,
+                    marginBottom: 20,
+                    lineHeight: 20,
+                  }}
+                >
                   Agrega medicamentos y actividades para que aparezcan en tu checklist diario.
                 </Text>
                 <Pressable
@@ -287,6 +448,10 @@ export default function MedicationsScreen() {
                 >
                   <Text style={{ color: colors.white, fontWeight: "600" }}>Agregar el primero</Text>
                 </Pressable>
+              </View>
+            ) : filtered.length === 0 ? (
+              <View style={{ alignItems: "center", paddingTop: 32 }}>
+                <Text style={{ fontSize: 14, color: colors.textMuted }}>Sin resultados para tu búsqueda</Text>
               </View>
             ) : null
           }

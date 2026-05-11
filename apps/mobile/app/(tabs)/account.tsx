@@ -56,6 +56,7 @@ function Card({ children }: { children: React.ReactNode }) {
 function CardRow({
   icon: Icon,
   label,
+  subtitle,
   value,
   onPress,
   danger,
@@ -63,6 +64,7 @@ function CardRow({
 }: {
   icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
   label: string;
+  subtitle?: string;
   value?: string;
   onPress?: () => void;
   danger?: boolean;
@@ -76,7 +78,7 @@ function CardRow({
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: spacing.lg,
-        paddingVertical: 15,
+        paddingVertical: 14,
         backgroundColor: pressed && onPress ? colors.gray50 : colors.white,
         borderBottomWidth: last ? 0 : 1,
         borderBottomColor: colors.gray100,
@@ -95,9 +97,14 @@ function CardRow({
       >
         <Icon size={17} color={danger ? colors.danger : colors.primary} strokeWidth={1.8} />
       </View>
-      <Text style={{ flex: 1, fontSize: 15, color: danger ? colors.danger : colors.textPrimary, fontWeight: "500" }}>
-        {label}
-      </Text>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 15, color: danger ? colors.danger : colors.textPrimary, fontWeight: "500" }}>
+          {label}
+        </Text>
+        {subtitle !== undefined && (
+          <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 1 }}>{subtitle}</Text>
+        )}
+      </View>
       {value !== undefined && (
         <Text style={{ fontSize: 13, color: colors.textMuted, maxWidth: "45%", textAlign: "right" }} numberOfLines={1}>
           {value}
@@ -206,7 +213,7 @@ export default function AccountScreen() {
 
           <SectionTitle label="Cuenta" />
           <Card>
-            <CardRow icon={Mail} label="Email" value={email} last />
+            <CardRow icon={Mail} label="Email" subtitle={email} last />
           </Card>
 
           <SectionTitle label="Seguridad" />
@@ -214,6 +221,7 @@ export default function AccountScreen() {
             <CardRow
               icon={Key}
               label="Cambiar contraseña"
+              subtitle="Actualiza tu acceso de forma segura"
               onPress={() => setShowPasswordForm((v) => !v)}
               last={!showPasswordForm}
             />
@@ -272,7 +280,7 @@ export default function AccountScreen() {
 
           <SectionTitle label="Zona de peligro" />
           <Card>
-            <CardRow icon={Trash2} label="Eliminar cuenta" onPress={confirmDeleteAccount} danger last />
+            <CardRow icon={Trash2} label="Eliminar cuenta" subtitle="Esta acción es permanente" onPress={confirmDeleteAccount} danger last />
           </Card>
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 4 }}>
