@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildHistory, buildHistoryRange } from "../history.js";
-import type { Item, Log } from "@mi-dia/types";
+import type { Item, Log, DailyMood } from "@mi-dia/types";
 
 function makeItem(overrides: Partial<Item> = {}): Item {
   return {
@@ -209,5 +209,44 @@ describe("buildHistoryRange", () => {
     const items = [makeItem()];
     const result = buildHistoryRange(items, [], TODAY, TODAY);
     expect(result).toHaveLength(1);
+  });
+
+  it("mood presente en moods[] → DayHistory.mood refleja MoodValue", () => {
+    const items = [makeItem()];
+    const moods: DailyMood[] = [
+      {
+        id: "m1", user_id: "u1", date: TODAY, mood: 4,
+        note: null, created_at: "2026-05-09T10:00:00Z", updated_at: "2026-05-09T10:00:00Z",
+      },
+    ];
+    const result = buildHistoryRange(items, [], TODAY, TODAY, moods);
+    expect(result[0].mood).toBe(4);
+  });
+
+  it("sin mood para la fecha → DayHistory.mood es null", () => {
+    const items = [makeItem()];
+    const result = buildHistoryRange(items, [], TODAY, TODAY);
+    expect(result[0].mood).toBeNull();
+  });
+
+  it("moods[] vacío → todos los días tienen mood null", () => {
+    const items = [makeItem()];
+    const result = buildHistoryRange(items, [], "2026-05-07", TODAY, []);
+    expect(result.every((d) => d.mood === null)).toBe(true);
+  });
+
+  it("múltiples días con moods distintos → cada día recibe su mood", () => {
+    const items = [makeItem()];
+    const moods: DailyMood[] = [
+      { id: "m1", user_id: "u1", date: "2026-05-07", mood: 2, note: null, created_at: "", updated_at: "" },
+      { id: "m2", user_id: "u1", date: "2026-05-09", mood: 5, note: null, created_at: "", updated_at: "" },
+    ];
+    const result = buildHistoryRange(items, [], "2026-05-07", TODAY, moods);
+    const day09 = result.find((d) => d.date === "2026-05-09")!;
+    const day08 = result.find((d) => d.date === "2026-05-08")!;
+    const day07 = result.find((d) => d.date === "2026-05-07")!;
+    expect(day09.mood).toBe(5);
+    expect(day08.mood).toBeNull();
+    expect(day07.mood).toBe(2);
   });
 });
