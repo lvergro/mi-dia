@@ -12,20 +12,24 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Eye, EyeOff, Key, Mail, Shield, Trash2 } from "lucide-react-native";
 import { updatePassword, deleteAccount } from "@mi-dia/database";
 import { useSessionStore } from "../../hooks/useSession";
+import { colors, radii, shadows, spacing } from "../../theme";
 
 function SectionTitle({ label }: { label: string }) {
   return (
-    <Text style={{
-      fontSize: 11,
-      fontWeight: "700",
-      color: "#94a3b8",
-      textTransform: "uppercase",
-      letterSpacing: 0.8,
-      marginBottom: 8,
-      marginLeft: 4,
-    }}>
+    <Text
+      style={{
+        fontSize: 11,
+        fontWeight: "700",
+        color: colors.textMuted,
+        textTransform: "uppercase",
+        letterSpacing: 0.8,
+        marginBottom: spacing.sm,
+        marginLeft: 4,
+      }}
+    >
       {label}
     </Text>
   );
@@ -33,26 +37,31 @@ function SectionTitle({ label }: { label: string }) {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <View style={{
-      backgroundColor: "#ffffff",
-      borderRadius: 16,
-      overflow: "hidden",
-      shadowColor: "#6366f1",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 2,
-      marginBottom: 24,
-    }}>
+    <View
+      style={{
+        backgroundColor: colors.white,
+        borderRadius: radii.lg,
+        overflow: "hidden",
+        marginBottom: spacing.xxl,
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+        ...shadows.card,
+      }}
+    >
       {children}
     </View>
   );
 }
 
 function CardRow({
-  icon, label, value, onPress, danger, last,
+  icon: Icon,
+  label,
+  value,
+  onPress,
+  danger,
+  last,
 }: {
-  icon: string;
+  icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
   label: string;
   value?: string;
   onPress?: () => void;
@@ -66,34 +75,36 @@ function CardRow({
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 16,
+        paddingHorizontal: spacing.lg,
         paddingVertical: 15,
-        backgroundColor: pressed && onPress ? "#f8fafc" : "#ffffff",
+        backgroundColor: pressed && onPress ? colors.gray50 : colors.white,
         borderBottomWidth: last ? 0 : 1,
-        borderBottomColor: "#f1f5f9",
+        borderBottomColor: colors.gray100,
       })}
     >
-      <View style={{
-        width: 34,
-        height: 34,
-        borderRadius: 10,
-        backgroundColor: danger ? "#fef2f2" : "#f0f4ff",
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: 12,
-      }}>
-        <Text style={{ fontSize: 17 }}>{icon}</Text>
+      <View
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: radii.md,
+          backgroundColor: danger ? colors.dangerSubtle : colors.primarySubtle,
+          alignItems: "center",
+          justifyContent: "center",
+          marginRight: 12,
+        }}
+      >
+        <Icon size={17} color={danger ? colors.danger : colors.primary} strokeWidth={1.8} />
       </View>
-      <Text style={{ flex: 1, fontSize: 15, color: danger ? "#ef4444" : "#1e293b", fontWeight: "500" }}>
+      <Text style={{ flex: 1, fontSize: 15, color: danger ? colors.danger : colors.textPrimary, fontWeight: "500" }}>
         {label}
       </Text>
       {value !== undefined && (
-        <Text style={{ fontSize: 13, color: "#94a3b8", maxWidth: "45%", textAlign: "right" }} numberOfLines={1}>
+        <Text style={{ fontSize: 13, color: colors.textMuted, maxWidth: "45%", textAlign: "right" }} numberOfLines={1}>
           {value}
         </Text>
       )}
       {onPress && value === undefined && (
-        <Text style={{ fontSize: 20, color: "#cbd5e1", lineHeight: 24 }}>›</Text>
+        <Text style={{ fontSize: 20, color: colors.gray300, lineHeight: 24 }}>›</Text>
       )}
     </Pressable>
   );
@@ -127,7 +138,7 @@ export default function AccountScreen() {
     setIsChangingPassword(true);
     try {
       await updatePassword(pwd);
-      Alert.alert("✓ Listo", "Tu contraseña fue actualizada.");
+      Alert.alert("Listo", "Tu contraseña fue actualizada.");
       setShowPasswordForm(false);
       setNewPassword("");
       setConfirmPassword("");
@@ -170,101 +181,104 @@ export default function AccountScreen() {
 
   if (isDeletingAccount) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" }}>
-        <ActivityIndicator size="large" color="#ef4444" />
-        <Text style={{ color: "#94a3b8", marginTop: 12, fontSize: 14 }}>Eliminando cuenta…</Text>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface }}>
+        <ActivityIndicator size="large" color={colors.danger} />
+        <Text style={{ color: colors.textMuted, marginTop: 12, fontSize: 14 }}>Eliminando cuenta…</Text>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#f8fafc" }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.surface }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView contentContainerStyle={{ paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-        {/* Avatar + info */}
-        <View style={{ alignItems: "center", paddingTop: 32, paddingBottom: 28, backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#f1f5f9" }}>
-          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: "#ede9fe", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+        <View style={{ alignItems: "center", paddingTop: 28, paddingBottom: 24, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
             <Image source={require("../../assets/icon.png")} style={{ width: 48, height: 48, borderRadius: 12 }} resizeMode="contain" />
           </View>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#1e293b", marginBottom: 2 }}>{email}</Text>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: colors.textPrimary, marginBottom: 2 }}>{email}</Text>
           {createdAt && (
-            <Text style={{ fontSize: 12, color: "#94a3b8" }}>Miembro desde {createdAt}</Text>
+            <Text style={{ fontSize: 12, color: colors.textMuted }}>Miembro desde {createdAt}</Text>
           )}
         </View>
 
-        <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.xxl }}>
 
-          {/* Cuenta */}
           <SectionTitle label="Cuenta" />
           <Card>
-            <CardRow icon="✉️" label="Email" value={email} last />
+            <CardRow icon={Mail} label="Email" value={email} last />
           </Card>
 
-          {/* Seguridad */}
           <SectionTitle label="Seguridad" />
           <Card>
             <CardRow
-              icon="🔑"
+              icon={Key}
               label="Cambiar contraseña"
               onPress={() => setShowPasswordForm((v) => !v)}
               last={!showPasswordForm}
             />
             {showPasswordForm && (
-              <View style={{ paddingHorizontal: 16, paddingBottom: 16, backgroundColor: "#fafafe" }}>
-                <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#e2e8f0", borderRadius: 12, paddingHorizontal: 12, marginBottom: 8, backgroundColor: "#ffffff" }}>
+              <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, backgroundColor: colors.gray50 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.cardBorder, borderRadius: radii.md, paddingHorizontal: 12, marginBottom: 8, backgroundColor: colors.white }}>
                   <TextInput
                     value={newPassword}
                     onChangeText={setNewPassword}
                     placeholder="Nueva contraseña"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={colors.textMuted}
                     secureTextEntry={!showNew}
-                    style={{ flex: 1, paddingVertical: 12, fontSize: 14, color: "#1e293b" }}
+                    style={{ flex: 1, paddingVertical: 12, fontSize: 14, color: colors.textPrimary }}
                   />
                   <Pressable onPress={() => setShowNew(v => !v)} hitSlop={8}>
-                    <Text style={{ fontSize: 16, color: "#94a3b8" }}>{showNew ? "🙈" : "👁"}</Text>
+                    {showNew
+                      ? <EyeOff size={18} color={colors.textMuted} strokeWidth={1.8} />
+                      : <Eye size={18} color={colors.textMuted} strokeWidth={1.8} />
+                    }
                   </Pressable>
                 </View>
-                <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#e2e8f0", borderRadius: 12, paddingHorizontal: 12, marginBottom: 12, backgroundColor: "#ffffff" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.cardBorder, borderRadius: radii.md, paddingHorizontal: 12, marginBottom: 12, backgroundColor: colors.white }}>
                   <TextInput
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     placeholder="Confirmar contraseña"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={colors.textMuted}
                     secureTextEntry={!showConfirm}
-                    style={{ flex: 1, paddingVertical: 12, fontSize: 14, color: "#1e293b" }}
+                    style={{ flex: 1, paddingVertical: 12, fontSize: 14, color: colors.textPrimary }}
                   />
                   <Pressable onPress={() => setShowConfirm(v => !v)} hitSlop={8}>
-                    <Text style={{ fontSize: 16, color: "#94a3b8" }}>{showConfirm ? "🙈" : "👁"}</Text>
+                    {showConfirm
+                      ? <EyeOff size={18} color={colors.textMuted} strokeWidth={1.8} />
+                      : <Eye size={18} color={colors.textMuted} strokeWidth={1.8} />
+                    }
                   </Pressable>
                 </View>
                 <TouchableOpacity
                   onPress={() => void handleChangePassword()}
                   disabled={isChangingPassword || !newPassword.trim()}
                   style={{
-                    backgroundColor: newPassword.trim() ? "#4f46e5" : "#e2e8f0",
-                    borderRadius: 12,
+                    backgroundColor: newPassword.trim() ? colors.primary : colors.gray200,
+                    borderRadius: radii.md,
                     paddingVertical: 13,
                     alignItems: "center",
                   }}
                 >
                   {isChangingPassword
-                    ? <ActivityIndicator size="small" color="#ffffff" />
-                    : <Text style={{ color: newPassword.trim() ? "#ffffff" : "#94a3b8", fontWeight: "600", fontSize: 14 }}>Actualizar contraseña</Text>
+                    ? <ActivityIndicator size="small" color={colors.white} />
+                    : <Text style={{ color: newPassword.trim() ? colors.white : colors.textMuted, fontWeight: "600", fontSize: 14 }}>Actualizar contraseña</Text>
                   }
                 </TouchableOpacity>
               </View>
             )}
           </Card>
 
-          {/* Zona de peligro */}
           <SectionTitle label="Zona de peligro" />
           <Card>
-            <CardRow icon="🗑️" label="Eliminar cuenta" onPress={confirmDeleteAccount} danger last />
+            <CardRow icon={Trash2} label="Eliminar cuenta" onPress={confirmDeleteAccount} danger last />
           </Card>
 
-          <Text style={{ fontSize: 11, color: "#cbd5e1", textAlign: "center", marginTop: 4 }}>
-            🔒 Tu información está protegida
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 4 }}>
+            <Shield size={12} color={colors.textDisabled} strokeWidth={1.5} />
+            <Text style={{ fontSize: 11, color: colors.textDisabled }}>Tu información está protegida</Text>
+          </View>
 
         </View>
       </ScrollView>
