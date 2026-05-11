@@ -39,13 +39,35 @@ function formatTime(time: string): string {
   return time.slice(0, 5); // 'HH:MM'
 }
 
+const MOOD_COLORS: Record<number, string> = {
+  1: "#ef4444",
+  2: "#f97316",
+  3: "#eab308",
+  4: "#22c55e",
+  5: "#3b82f6",
+};
+
 function DayRow({ item, onPress }: { item: DayHistory; onPress: () => void }) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100"
     >
-      <Text className="text-gray-800 capitalize">{formatDate(item.date)}</Text>
+      <View className="flex-row items-center gap-2">
+        {item.mood !== null && item.mood !== undefined ? (
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: MOOD_COLORS[item.mood] ?? "#e5e7eb",
+            }}
+          />
+        ) : (
+          <View style={{ width: 10, height: 10 }} />
+        )}
+        <Text className="text-gray-800 capitalize">{formatDate(item.date)}</Text>
+      </View>
       <View className="flex-row items-center gap-3">
         <Text className="text-gray-500 text-sm">{item.done}/{item.total}</Text>
         <View

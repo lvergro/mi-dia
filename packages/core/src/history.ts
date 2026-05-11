@@ -1,4 +1,4 @@
-import type { Item, Log } from "@mi-dia/types";
+import type { Item, Log, DailyMood, MoodValue } from "@mi-dia/types";
 import { filterItemsForDate } from "./checklist.js";
 
 export type DayItemStatus = "done" | "omitted" | "pending";
@@ -16,6 +16,7 @@ export interface DayHistory {
   done: number;
   pct: number; // 0-100, Math.round(done/total*100) o 0 si total=0
   items: DayHistoryItem[];
+  mood: MoodValue | null;
 }
 
 function dateRangeDesc(startDate: string, endDate: string): string[] {
@@ -34,10 +35,12 @@ export function buildHistoryRange(
   items: Item[],
   logs: Log[],
   startDate: string, // 'YYYY-MM-DD' — primer día inclusivo
-  endDate: string    // 'YYYY-MM-DD' — último día inclusivo
+  endDate: string,   // 'YYYY-MM-DD' — último día inclusivo
+  moods: DailyMood[] = []
 ): DayHistory[] {
   const activeItems = items.filter((i) => i.deleted_at === null);
   const dates = dateRangeDesc(startDate, endDate);
+  const moodMap = new Map(moods.map((m) => [m.date, m.mood as MoodValue]));
   const result: DayHistory[] = [];
 
   for (const date of dates) {
@@ -72,6 +75,7 @@ export function buildHistoryRange(
       done,
       pct: total > 0 ? Math.round((done / total) * 100) : 0,
       items: historyItems,
+      mood: moodMap.get(date) ?? null,
     });
   }
 
@@ -132,6 +136,7 @@ export function buildHistory(
       done,
       pct: total > 0 ? Math.round((done / total) * 100) : 0,
       items: historyItems,
+      mood: null,
     });
   }
 

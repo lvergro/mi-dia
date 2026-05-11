@@ -101,3 +101,21 @@ export interface Log {
 }
 
 export type LogInsert = Omit<Log, "id" | "user_id" | "created_at">;
+
+export type MoodValue = 1 | 2 | 3 | 4 | 5;
+
+export interface DailyMood {
+  id: string;
+  user_id: string;
+  date: string; // "YYYY-MM-DD"
+  mood: MoodValue;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DailyMoodInsert = {
+  date: string;
+  mood: MoodValue;
+  note: string | null;
+};

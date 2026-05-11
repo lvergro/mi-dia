@@ -15,6 +15,8 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { useChecklist } from "../../hooks/useChecklist";
 import { useCreateLog, useDeleteLog } from "../../hooks/useLogMutations";
+import { useMood } from "../../hooks/useMood";
+import { MoodCard } from "../../components/mood/MoodCard";
 import type { ItemWithStatus, ItemBlock } from "@mi-dia/core";
 
 const BLOCK_ORDER: ItemBlock[] = ["mañana", "tarde", "noche"];
@@ -122,6 +124,8 @@ export default function MiDiaScreen() {
 
   const createLog = useCreateLog(viewDate);
   const deleteLog = useDeleteLog(viewDate);
+
+  const { mood, note: moodNote, setMood, setNote: setMoodNote, isSaving: isMoodSaving } = useMood(viewDate);
 
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
@@ -268,7 +272,7 @@ export default function MiDiaScreen() {
         }
       >
         {dateNavBar}
-        <View className="flex-1 items-center justify-center px-8 pt-16">
+        <View className="items-center px-8 pt-16 pb-8">
           {isToday ? (
             <>
               <Text className="text-5xl mb-4">☀️</Text>
@@ -294,6 +298,15 @@ export default function MiDiaScreen() {
             </>
           )}
         </View>
+        {isToday && (
+          <MoodCard
+            mood={mood}
+            note={moodNote}
+            onMoodChange={setMood}
+            onNoteChange={setMoodNote}
+            isSaving={isMoodSaving}
+          />
+        )}
       </ScrollView>
     );
   }
@@ -338,6 +351,14 @@ export default function MiDiaScreen() {
             </View>
           </View>
         ))}
+        <MoodCard
+          mood={mood}
+          note={moodNote}
+          onMoodChange={setMood}
+          onNoteChange={setMoodNote}
+          isSaving={isMoodSaving}
+          readonly={!isToday}
+        />
       </ScrollView>
 
       <Modal
