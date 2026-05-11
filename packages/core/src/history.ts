@@ -18,6 +18,66 @@ export interface DayHistory {
   items: DayHistoryItem[];
 }
 
+function dateRangeDesc(startDate: string, endDate: string): string[] {
+  const dates: string[] = [];
+  const start = new Date(startDate + "T00:00:00");
+  const end = new Date(endDate + "T00:00:00");
+  const cur = new Date(end);
+  while (cur >= start) {
+    dates.push(cur.toISOString().slice(0, 10));
+    cur.setDate(cur.getDate() - 1);
+  }
+  return dates;
+}
+
+export function buildHistoryRange(
+  items: Item[],
+  logs: Log[],
+  startDate: string, // 'YYYY-MM-DD' — primer día inclusivo
+  endDate: string    // 'YYYY-MM-DD' — último día inclusivo
+): DayHistory[] {
+  const activeItems = items.filter((i) => i.deleted_at === null);
+  const dates = dateRangeDesc(startDate, endDate);
+  const result: DayHistory[] = [];
+
+  for (const date of dates) {
+    const dayItems = filterItemsForDate(activeItems, date);
+    if (dayItems.length === 0) continue;
+
+    const dayLogs = logs.filter((l) => l.date === date);
+    const logMap = new Map(dayLogs.map((l) => [l.item_id, l.status]));
+
+    const historyItems: DayHistoryItem[] = dayItems.map((item) => {
+      const logStatus = logMap.get(item.id);
+      const status: DayItemStatus =
+        logStatus === "done"
+          ? "done"
+          : logStatus === "omitted"
+          ? "omitted"
+          : "pending";
+      return {
+        item_id: item.id,
+        name: item.name,
+        scheduled_time: item.specific_time,
+        status,
+      };
+    });
+
+    const done = historyItems.filter((i) => i.status === "done").length;
+    const total = dayItems.length;
+
+    result.push({
+      date,
+      total,
+      done,
+      pct: total > 0 ? Math.round((done / total) * 100) : 0,
+      items: historyItems,
+    });
+  }
+
+  return result;
+}
+
 // Genera rango de fechas [today - rangeDays + 1 .. today] en orden desc
 function dateRange(today: string, rangeDays: number): string[] {
   const dates: string[] = [];

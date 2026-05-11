@@ -1,6 +1,17 @@
 import type { Log, LogInsert } from "@mi-dia/types";
 import { supabase } from "./client.js";
 
+export async function getFirstLogDate(): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("logs")
+    .select("date")
+    .order("date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.date ?? null;
+}
+
 export async function getLogsForDate(date: string): Promise<Log[]> {
   const { data, error } = await supabase
     .from("logs")
