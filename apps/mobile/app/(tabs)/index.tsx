@@ -16,6 +16,7 @@ import { useRouter } from "expo-router";
 import { useChecklist } from "../../hooks/useChecklist";
 import { useCreateLog, useDeleteLog } from "../../hooks/useLogMutations";
 import { useMood } from "../../hooks/useMood";
+import { colors, radii, spacing } from "../../theme";
 import type { ItemWithStatus, ItemBlock } from "@mi-dia/core";
 
 const BLOCK_ORDER: ItemBlock[] = ["mañana", "tarde", "noche"];
@@ -61,15 +62,6 @@ function ChecklistItemCard({ item, onTap, isPending }: ChecklistItemCardProps) {
   const isDone = item.status === "done";
   const isOmitted = item.status === "omitted";
 
-  const cardBg = isDone
-    ? "bg-green-50 border-green-200"
-    : isOmitted
-      ? "bg-gray-100 border-gray-200"
-      : "bg-white border-gray-100";
-
-  const textColor = isOmitted ? "text-gray-400" : "text-gray-900";
-  const subTextColor = isOmitted ? "text-gray-400" : "text-gray-500";
-
   const recurrenceLabel =
     item.recurrence_type === "daily"
       ? "Diaria"
@@ -79,41 +71,153 @@ function ChecklistItemCard({ item, onTap, isPending }: ChecklistItemCardProps) {
 
   return (
     <Pressable onPress={() => onTap(item)} disabled={isPending}>
-      <View className={`flex-row items-center py-3 px-3 mb-2 rounded-xl border ${cardBg}`}>
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2 mb-0.5">
-            <Text className={`font-semibold text-sm ${textColor} ${isDone ? "line-through" : ""}`}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingVertical: 12,
+          paddingHorizontal: 12,
+          marginBottom: 8,
+          borderRadius: radii.lg,
+          borderWidth: 1,
+          borderColor: isDone ? colors.successLight : isOmitted ? colors.gray200 : colors.cardBorder,
+          backgroundColor: isDone ? colors.successSubtle : isOmitted ? colors.gray50 : colors.white,
+          opacity: isOmitted ? 0.65 : 1,
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 2 }}>
+            <Text
+              style={{
+                fontWeight: "600",
+                fontSize: 14,
+                color: isDone ? colors.success : isOmitted ? colors.textMuted : colors.textPrimary,
+              }}
+            >
               {item.name}
             </Text>
-            <View className={`rounded px-1.5 py-0.5 ${item.type === "medication" ? "bg-blue-100" : "bg-purple-100"}`}>
-              <Text className={`text-xs font-medium ${item.type === "medication" ? "text-blue-700" : "text-purple-700"}`}>
-                {item.type === "medication" ? "Med." : "Act."}
+            <View
+              style={{
+                borderRadius: radii.sm,
+                paddingHorizontal: 6,
+                paddingVertical: 2,
+                backgroundColor: item.type === "medication" ? colors.infoSubtle : colors.primarySubtle,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 10,
+                  fontWeight: "600",
+                  color: item.type === "medication" ? colors.info : colors.primary,
+                }}
+              >
+                {item.type === "medication" ? "Med" : "Act"}
               </Text>
             </View>
           </View>
-          <View className="flex-row items-center gap-2">
-            <Text className={`text-xs ${subTextColor}`}>{formatTime(item.specific_time)}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={{ fontSize: 12, color: colors.textMuted }}>{formatTime(item.specific_time)}</Text>
             {item.dose !== null && (
-              <Text className={`text-xs ${subTextColor}`}>{item.dose}</Text>
+              <Text style={{ fontSize: 12, color: colors.textMuted }}>{item.dose}</Text>
             )}
-            <View className="bg-gray-100 rounded px-1.5 py-0.5">
-              <Text className="text-xs text-gray-500">{recurrenceLabel}</Text>
+            <View style={{ backgroundColor: colors.gray100, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+              <Text style={{ fontSize: 10, color: colors.textSecondary }}>{recurrenceLabel}</Text>
             </View>
           </View>
         </View>
-        <View className="ml-3 items-center justify-center w-7 h-7">
+        <View style={{ marginLeft: 12, width: 28, height: 28, alignItems: "center", justifyContent: "center" }}>
           {isPending ? (
-            <ActivityIndicator size="small" color="#4f46e5" />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : isDone ? (
-            <Text className="text-green-600 text-lg font-bold">✓</Text>
+            <View
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: colors.success,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ color: colors.white, fontSize: 13, fontWeight: "700" }}>✓</Text>
+            </View>
           ) : isOmitted ? (
-            <Text className="text-gray-400 text-lg">–</Text>
+            <View
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: colors.gray200,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ color: colors.textMuted, fontSize: 13, fontWeight: "700" }}>–</Text>
+            </View>
           ) : (
-            <View className="w-5 h-5 rounded-full border-2 border-gray-300" />
+            <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.gray300 }} />
           )}
         </View>
       </View>
     </Pressable>
+  );
+}
+
+function ProgressBanner({
+  done,
+  total,
+  mood,
+  isToday,
+}: {
+  done: number;
+  total: number;
+  mood: number | null;
+  isToday: boolean;
+}) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const allDone = total > 0 && done === total;
+
+  return (
+    <View
+      style={{
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
+        borderRadius: radii.xl,
+        backgroundColor: allDone ? colors.successSubtle : colors.primarySubtle,
+        borderWidth: 1,
+        borderColor: allDone ? colors.successLight : colors.primaryLight,
+        padding: spacing.lg,
+      }}
+    >
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+        <View>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: allDone ? colors.success : colors.primary, marginBottom: 2 }}>
+            {isToday ? (allDone ? "¡Día completado!" : "Progreso de hoy") : "Resumen del día"}
+          </Text>
+          <Text style={{ fontSize: 22, fontWeight: "700", color: allDone ? colors.success : colors.textPrimary }}>
+            {done}{" "}
+            <Text style={{ fontSize: 14, fontWeight: "400", color: colors.textSecondary }}>de {total} completados</Text>
+          </Text>
+        </View>
+        <View style={{ alignItems: "center", gap: 4 }}>
+          <View
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: allDone ? colors.success : colors.primary,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ fontSize: 13, fontWeight: "700", color: colors.white }}>{pct}%</Text>
+          </View>
+          {mood !== null && (
+            <Text style={{ fontSize: 18 }}>{MOOD_EMOJI[mood]}</Text>
+          )}
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -134,8 +238,9 @@ export default function MiDiaScreen() {
 
   const displayDate = formatDisplayDate(viewDate);
 
-  const totalItems = BLOCK_ORDER.reduce(
-    (sum, block) => sum + checklist[block].length,
+  const totalItems = BLOCK_ORDER.reduce((sum, block) => sum + checklist[block].length, 0);
+  const doneItems = BLOCK_ORDER.reduce(
+    (sum, block) => sum + checklist[block].filter((i) => i.status === "done").length,
     0,
   );
 
@@ -216,54 +321,45 @@ export default function MiDiaScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-surface items-center justify-center">
-        <ActivityIndicator size="large" color="#4f46e5" />
+      <View style={{ flex: 1, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 bg-surface items-center justify-center px-6">
-        <Text className="text-red-500 text-center">No se pudieron cargar los ítems del día.</Text>
+      <View style={{ flex: 1, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
+        <Text style={{ color: colors.danger, textAlign: "center" }}>No se pudieron cargar los ítems del día.</Text>
       </View>
     );
   }
 
-  const moodBanner = (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingBottom: 8 }}>
-      <Text style={{ fontSize: 12, color: "#9ca3af" }}>¿Cómo te sientes hoy?</Text>
-      <Text style={{ fontSize: 22 }}>
-        {mood ? MOOD_EMOJI[mood] : "○"}
-      </Text>
-    </View>
-  );
-
   const dateNavBar = (
-    <View className="flex-row items-center justify-between px-4 pt-4 pb-2">
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.sm }}>
       <Pressable
         onPress={() => setViewDate(addDays(viewDate, -1))}
-        className="w-10 h-10 items-center justify-center rounded-full bg-gray-100"
+        style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18, backgroundColor: colors.gray100 }}
         hitSlop={8}
       >
-        <Text className="text-gray-700 text-lg">‹</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: 18, lineHeight: 22 }}>‹</Text>
       </Pressable>
-      <View className="flex-1 items-center">
-        <Text className="text-2xl font-bold text-gray-900">Mi Día</Text>
-        <Text className="text-xs text-muted capitalize mt-0.5">{displayDate}</Text>
+      <View style={{ flex: 1, alignItems: "center" }}>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary }}>Mi Día</Text>
+        <Text style={{ fontSize: 12, color: colors.textMuted, textTransform: "capitalize", marginTop: 2 }}>{displayDate}</Text>
         {!isToday && (
           <Pressable onPress={() => setViewDate(todayStr)} hitSlop={6}>
-            <Text className="text-xs text-primary mt-1 font-medium">Volver a hoy</Text>
+            <Text style={{ fontSize: 12, color: colors.primary, marginTop: 4, fontWeight: "500" }}>Volver a hoy</Text>
           </Pressable>
         )}
       </View>
       <Pressable
         onPress={() => { if (!isToday) setViewDate(addDays(viewDate, 1)); }}
-        className={`w-10 h-10 items-center justify-center rounded-full ${isToday ? "bg-gray-50" : "bg-gray-100"}`}
+        style={{ width: 36, height: 36, alignItems: "center", justifyContent: "center", borderRadius: 18, backgroundColor: isToday ? colors.gray50 : colors.gray100 }}
         hitSlop={8}
         disabled={isToday}
       >
-        <Text className={`text-lg ${isToday ? "text-gray-300" : "text-gray-700"}`}>›</Text>
+        <Text style={{ fontSize: 18, lineHeight: 22, color: isToday ? colors.gray300 : colors.textSecondary }}>›</Text>
       </Pressable>
     </View>
   );
@@ -271,33 +367,34 @@ export default function MiDiaScreen() {
   if (totalItems === 0) {
     return (
       <ScrollView
-        className="flex-1 bg-surface"
+        style={{ flex: 1, backgroundColor: colors.surface }}
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
-          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor={colors.primary} />
         }
       >
         {dateNavBar}
-        {moodBanner}
-        <View className="items-center px-8 pt-8 pb-8">
+        <View style={{ alignItems: "center", paddingHorizontal: 32, paddingTop: 32, paddingBottom: 32 }}>
           {isToday ? (
             <>
-              <Text className="text-5xl mb-4">☀️</Text>
-              <Text className="text-xl font-bold text-gray-900 text-center mb-2">Tu día está vacío</Text>
-              <Text className="text-sm text-muted text-center mb-8">
-                Agrega medicamentos y actividades en la pestaña Medicamentos
+              <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primarySubtle, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <Text style={{ fontSize: 32 }}>☀️</Text>
+              </View>
+              <Text style={{ fontSize: 20, fontWeight: "700", color: colors.textPrimary, textAlign: "center", marginBottom: 8 }}>Tu día está vacío</Text>
+              <Text style={{ fontSize: 14, color: colors.textMuted, textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
+                Agrega medicamentos y actividades en la pestaña Rutina
               </Text>
               <Pressable
-                className="bg-primary rounded-2xl px-8 py-4"
+                style={{ backgroundColor: colors.primary, borderRadius: radii.lg, paddingHorizontal: 28, paddingVertical: 14 }}
                 onPress={() => router.navigate("/(tabs)/medications")}
               >
-                <Text className="text-white font-semibold text-base">Ir a Medicamentos</Text>
+                <Text style={{ color: colors.white, fontWeight: "600", fontSize: 15 }}>Ir a Rutina</Text>
               </Pressable>
             </>
           ) : (
             <>
-              <Text className="text-5xl mb-4">📭</Text>
-              <Text className="text-base text-gray-500 text-center">Sin registros para este día</Text>
+              <Text style={{ fontSize: 40, marginBottom: 12 }}>📭</Text>
+              <Text style={{ fontSize: 14, color: colors.textMuted, textAlign: "center" }}>Sin registros para este día</Text>
             </>
           )}
         </View>
@@ -308,41 +405,42 @@ export default function MiDiaScreen() {
   return (
     <>
       <ScrollView
-        className="flex-1 bg-surface"
+        style={{ flex: 1, backgroundColor: colors.surface }}
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
-          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
+          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor={colors.primary} />
         }
       >
         {dateNavBar}
-        {moodBanner}
+
+        <ProgressBanner done={doneItems} total={totalItems} mood={mood} isToday={isToday} />
+
         {!isToday && (
-          <View className="mx-4 mb-2 px-3 py-2 bg-amber-50 rounded-xl border border-amber-100">
-            <Text className="text-xs text-amber-700 text-center">Modo lectura — día pasado</Text>
+          <View style={{ marginHorizontal: spacing.lg, marginBottom: 8, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.warningSubtle, borderRadius: radii.lg, borderWidth: 1, borderColor: colors.warningLight }}>
+            <Text style={{ fontSize: 12, color: colors.warning, textAlign: "center" }}>Modo lectura — día pasado</Text>
           </View>
         )}
+
         {BLOCK_ORDER.map((block) => (
-          <View key={block} className="mx-4 mb-4 bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <View className="px-4 pt-4 pb-2">
-              <Text className="text-xs font-semibold text-muted uppercase tracking-wide">
-                {BLOCK_LABEL[block]}
-              </Text>
-            </View>
-            <View className="px-4 pb-2">
-              {checklist[block].length === 0 ? (
-                <Text className="text-sm text-gray-400 pb-2">Sin items</Text>
-              ) : (
-                checklist[block].map((item) => (
+          checklist[block].length === 0 ? null : (
+            <View key={block} style={{ marginHorizontal: spacing.lg, marginBottom: spacing.md, backgroundColor: colors.white, borderRadius: radii.xl, borderWidth: 1, borderColor: colors.cardBorder, overflow: "hidden" }}>
+              <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: 6 }}>
+                <Text style={{ fontSize: 11, fontWeight: "700", color: colors.textMuted, textTransform: "uppercase", letterSpacing: 0.6 }}>
+                  {BLOCK_LABEL[block]}
+                </Text>
+              </View>
+              <View style={{ paddingHorizontal: spacing.md, paddingBottom: 8 }}>
+                {checklist[block].map((item) => (
                   <ChecklistItemCard
                     key={item.id}
                     item={item}
                     onTap={handleItemTap}
                     isPending={createLog.isPending || deleteLog.isPending}
                   />
-                ))
-              )}
+                ))}
+              </View>
             </View>
-          </View>
+          )
         ))}
       </ScrollView>
 
@@ -354,33 +452,34 @@ export default function MiDiaScreen() {
       >
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          className="flex-1 justify-end"
+          style={{ flex: 1, justifyContent: "flex-end" }}
         >
-          <View className="bg-white rounded-t-2xl p-6">
-            <Text className="text-lg font-semibold text-gray-900 mb-1">Motivo de omisión</Text>
-            <Text className="text-sm text-gray-500 mb-4">Opcional</Text>
+          <View style={{ backgroundColor: colors.white, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl, padding: 24 }}>
+            <Text style={{ fontSize: 17, fontWeight: "600", color: colors.textPrimary, marginBottom: 4 }}>Motivo de omisión</Text>
+            <Text style={{ fontSize: 13, color: colors.textMuted, marginBottom: 16 }}>Opcional</Text>
             <TextInput
               value={noteText}
               onChangeText={setNoteText}
               placeholder="ej: no tenía el medicamento"
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={3}
-              className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 mb-4"
+              style={{ borderWidth: 1, borderColor: colors.cardBorder, borderRadius: radii.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: colors.textPrimary, marginBottom: 16, textAlignVertical: "top" }}
               autoFocus
             />
-            <View className="flex-row gap-3">
+            <View style={{ flexDirection: "row", gap: 12 }}>
               <Pressable
-                className="flex-1 border border-gray-200 rounded-xl py-3 items-center"
+                style={{ flex: 1, borderWidth: 1, borderColor: colors.cardBorder, borderRadius: radii.md, paddingVertical: 13, alignItems: "center" }}
                 onPress={() => { setNoteModalVisible(false); setPendingOmitItem(null); }}
               >
-                <Text className="text-gray-700 font-medium">Cancelar</Text>
+                <Text style={{ color: colors.textSecondary, fontWeight: "500" }}>Cancelar</Text>
               </Pressable>
               <Pressable
-                className="flex-1 bg-primary rounded-xl py-3 items-center"
+                style={{ flex: 1, backgroundColor: colors.primary, borderRadius: radii.md, paddingVertical: 13, alignItems: "center" }}
                 onPress={handleConfirmOmit}
                 disabled={createLog.isPending}
               >
-                <Text className="text-white font-medium">Confirmar</Text>
+                <Text style={{ color: colors.white, fontWeight: "600" }}>Confirmar</Text>
               </Pressable>
             </View>
           </View>
