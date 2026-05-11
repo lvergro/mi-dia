@@ -59,7 +59,6 @@ export default function TabsLayout() {
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: "500" },
         headerStyle: { backgroundColor: "#ffffff", elevation: 0, shadowOpacity: 0 },
-        headerTitleStyle: { fontWeight: "600" },
       }}
     >
       <Tabs.Screen
@@ -71,11 +70,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="medications"
         options={{
           ...sharedHeader,
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📋</Text>,
-          tabBarLabel: "Historial",
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>💊</Text>,
+          tabBarLabel: "Medicamentos",
         }}
       />
       <Tabs.Screen
@@ -87,11 +86,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="medications"
+        name="history"
         options={{
           ...sharedHeader,
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>💊</Text>,
-          tabBarLabel: "Medicamentos",
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📋</Text>,
+          tabBarLabel: "Historial",
         }}
       />
       <Tabs.Screen

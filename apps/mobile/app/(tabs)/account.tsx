@@ -2,32 +2,63 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { sendPasswordResetEmail, updatePassword, deleteAccount } from "@mi-dia/database";
-import { useAuth } from "../../hooks/useAuth";
+import { updatePassword, deleteAccount } from "@mi-dia/database";
 import { useSessionStore } from "../../hooks/useSession";
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionTitle({ label }: { label: string }) {
   return (
-    <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
-      <Text style={{ fontSize: 12, fontWeight: "600", color: "#9ca3af", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
-        {title}
-      </Text>
-      <View style={{ backgroundColor: "#ffffff", borderRadius: 12, borderWidth: 1, borderColor: "#e5e7eb", overflow: "hidden" }}>
-        {children}
-      </View>
+    <Text style={{
+      fontSize: 11,
+      fontWeight: "700",
+      color: "#94a3b8",
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+      marginBottom: 8,
+      marginLeft: 4,
+    }}>
+      {label}
+    </Text>
+  );
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={{
+      backgroundColor: "#ffffff",
+      borderRadius: 16,
+      overflow: "hidden",
+      shadowColor: "#6366f1",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
+      marginBottom: 24,
+    }}>
+      {children}
     </View>
   );
 }
 
-function Row({ label, value, onPress, danger }: { label: string; value?: string; onPress?: () => void; danger?: boolean }) {
+function CardRow({
+  icon, label, value, onPress, danger, last,
+}: {
+  icon: string;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  danger?: boolean;
+  last?: boolean;
+}) {
   return (
     <Pressable
       onPress={onPress}
@@ -35,22 +66,34 @@ function Row({ label, value, onPress, danger }: { label: string; value?: string;
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
         paddingHorizontal: 16,
-        paddingVertical: 14,
-        opacity: pressed ? 0.7 : 1,
-        borderBottomWidth: 1,
-        borderBottomColor: "#f3f4f6",
+        paddingVertical: 15,
+        backgroundColor: pressed && onPress ? "#f8fafc" : "#ffffff",
+        borderBottomWidth: last ? 0 : 1,
+        borderBottomColor: "#f1f5f9",
       })}
     >
-      <Text style={{ fontSize: 15, color: danger ? "#ef4444" : "#1f2937" }}>{label}</Text>
+      <View style={{
+        width: 34,
+        height: 34,
+        borderRadius: 10,
+        backgroundColor: danger ? "#fef2f2" : "#f0f4ff",
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: 12,
+      }}>
+        <Text style={{ fontSize: 17 }}>{icon}</Text>
+      </View>
+      <Text style={{ flex: 1, fontSize: 15, color: danger ? "#ef4444" : "#1e293b", fontWeight: "500" }}>
+        {label}
+      </Text>
       {value !== undefined && (
-        <Text style={{ fontSize: 14, color: "#9ca3af", maxWidth: "60%", textAlign: "right" }} numberOfLines={1}>
+        <Text style={{ fontSize: 13, color: "#94a3b8", maxWidth: "45%", textAlign: "right" }} numberOfLines={1}>
           {value}
         </Text>
       )}
-      {onPress && !value && (
-        <Text style={{ fontSize: 18, color: "#d1d5db" }}>›</Text>
+      {onPress && value === undefined && (
+        <Text style={{ fontSize: 20, color: "#cbd5e1", lineHeight: 24 }}>›</Text>
       )}
     </Pressable>
   );
@@ -58,12 +101,16 @@ function Row({ label, value, onPress, danger }: { label: string; value?: string;
 
 export default function AccountScreen() {
   const session = useSessionStore((s) => s.session);
-  const { signOut } = useAuth();
   const email = session?.user?.email ?? "—";
+  const createdAt = session?.user?.created_at
+    ? new Date(session.user.created_at).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })
+    : null;
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
@@ -80,13 +127,12 @@ export default function AccountScreen() {
     setIsChangingPassword(true);
     try {
       await updatePassword(pwd);
-      Alert.alert("Listo", "Tu contraseña fue actualizada.");
+      Alert.alert("✓ Listo", "Tu contraseña fue actualizada.");
       setShowPasswordForm(false);
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      Alert.alert("Error", msg);
+      Alert.alert("Error", err instanceof Error ? err.message : "Error desconocido");
     } finally {
       setIsChangingPassword(false);
     }
@@ -95,26 +141,17 @@ export default function AccountScreen() {
   function confirmDeleteAccount() {
     Alert.alert(
       "Eliminar cuenta",
-      "¿Estás seguro? Esta acción no se puede deshacer. Se eliminarán todos tus datos permanentemente.",
+      "Esta acción es permanente. Se borrarán todos tus datos y no podrás recuperarlos.",
       [
         { text: "Cancelar", style: "cancel" },
         {
-          text: "Eliminar mi cuenta",
+          text: "Eliminar",
           style: "destructive",
-          onPress: () => {
-            Alert.alert(
-              "Confirmar eliminación",
-              `Escribe tu email (${email}) para confirmar.`,
-              [
-                { text: "Cancelar", style: "cancel" },
-                {
-                  text: "Confirmar",
-                  style: "destructive",
-                  onPress: () => void handleDeleteAccount(),
-                },
-              ]
-            );
-          },
+          onPress: () =>
+            Alert.alert("¿Estás seguro?", "Confirma que deseas eliminar tu cuenta definitivamente.", [
+              { text: "Cancelar", style: "cancel" },
+              { text: "Sí, eliminar", style: "destructive", onPress: () => void handleDeleteAccount() },
+            ]),
         },
       ]
     );
@@ -127,8 +164,7 @@ export default function AccountScreen() {
       useSessionStore.getState().setSession(null);
     } catch (err) {
       setIsDeletingAccount(false);
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      Alert.alert("Error", msg);
+      Alert.alert("Error", err instanceof Error ? err.message : "Error desconocido");
     }
   }
 
@@ -136,93 +172,101 @@ export default function AccountScreen() {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" }}>
         <ActivityIndicator size="large" color="#ef4444" />
-        <Text style={{ color: "#9ca3af", marginTop: 12 }}>Eliminando cuenta…</Text>
+        <Text style={{ color: "#94a3b8", marginTop: 12, fontSize: 14 }}>Eliminando cuenta…</Text>
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "#f8fafc" }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView contentContainerStyle={{ paddingTop: 24, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#f8fafc" }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 48 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-        <Section title="Cuenta">
-          <Row label="Email" value={email} />
-        </Section>
-
-        <Section title="Seguridad">
-          <Row
-            label="Cambiar contraseña"
-            onPress={() => setShowPasswordForm((v) => !v)}
-          />
-          {showPasswordForm && (
-            <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
-              <TextInput
-                value={newPassword}
-                onChangeText={setNewPassword}
-                placeholder="Nueva contraseña"
-                placeholderTextColor="#9ca3af"
-                secureTextEntry
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#e5e7eb",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  fontSize: 14,
-                  color: "#111827",
-                  backgroundColor: "#f9fafb",
-                  marginBottom: 8,
-                }}
-              />
-              <TextInput
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirmar contraseña"
-                placeholderTextColor="#9ca3af"
-                secureTextEntry
-                style={{
-                  borderWidth: 1,
-                  borderColor: "#e5e7eb",
-                  borderRadius: 10,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  fontSize: 14,
-                  color: "#111827",
-                  backgroundColor: "#f9fafb",
-                  marginBottom: 12,
-                }}
-              />
-              <Pressable
-                onPress={() => void handleChangePassword()}
-                disabled={isChangingPassword || !newPassword.trim()}
-                style={({ pressed }) => ({
-                  backgroundColor: newPassword.trim() ? "#4f46e5" : "#e5e7eb",
-                  borderRadius: 10,
-                  paddingVertical: 12,
-                  alignItems: "center",
-                  opacity: pressed ? 0.8 : 1,
-                })}
-              >
-                {isChangingPassword
-                  ? <ActivityIndicator size="small" color="#ffffff" />
-                  : <Text style={{ color: newPassword.trim() ? "#ffffff" : "#9ca3af", fontWeight: "600", fontSize: 14 }}>Actualizar contraseña</Text>
-                }
-              </Pressable>
-            </View>
+        {/* Avatar + info */}
+        <View style={{ alignItems: "center", paddingTop: 32, paddingBottom: 28, backgroundColor: "#ffffff", borderBottomWidth: 1, borderBottomColor: "#f1f5f9" }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: "#ede9fe", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+            <Image source={require("../../assets/icon.png")} style={{ width: 48, height: 48, borderRadius: 12 }} resizeMode="contain" />
+          </View>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: "#1e293b", marginBottom: 2 }}>{email}</Text>
+          {createdAt && (
+            <Text style={{ fontSize: 12, color: "#94a3b8" }}>Miembro desde {createdAt}</Text>
           )}
-        </Section>
+        </View>
 
-        <Section title="Sesión">
-          <Row label="Cerrar sesión" onPress={() => void signOut()} />
-        </Section>
+        <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
 
-        <Section title="Zona de peligro">
-          <Row label="Eliminar cuenta" onPress={confirmDeleteAccount} danger />
-        </Section>
+          {/* Cuenta */}
+          <SectionTitle label="Cuenta" />
+          <Card>
+            <CardRow icon="✉️" label="Email" value={email} last />
+          </Card>
 
+          {/* Seguridad */}
+          <SectionTitle label="Seguridad" />
+          <Card>
+            <CardRow
+              icon="🔑"
+              label="Cambiar contraseña"
+              onPress={() => setShowPasswordForm((v) => !v)}
+              last={!showPasswordForm}
+            />
+            {showPasswordForm && (
+              <View style={{ paddingHorizontal: 16, paddingBottom: 16, backgroundColor: "#fafafe" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#e2e8f0", borderRadius: 12, paddingHorizontal: 12, marginBottom: 8, backgroundColor: "#ffffff" }}>
+                  <TextInput
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    placeholder="Nueva contraseña"
+                    placeholderTextColor="#94a3b8"
+                    secureTextEntry={!showNew}
+                    style={{ flex: 1, paddingVertical: 12, fontSize: 14, color: "#1e293b" }}
+                  />
+                  <Pressable onPress={() => setShowNew(v => !v)} hitSlop={8}>
+                    <Text style={{ fontSize: 16, color: "#94a3b8" }}>{showNew ? "🙈" : "👁"}</Text>
+                  </Pressable>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#e2e8f0", borderRadius: 12, paddingHorizontal: 12, marginBottom: 12, backgroundColor: "#ffffff" }}>
+                  <TextInput
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Confirmar contraseña"
+                    placeholderTextColor="#94a3b8"
+                    secureTextEntry={!showConfirm}
+                    style={{ flex: 1, paddingVertical: 12, fontSize: 14, color: "#1e293b" }}
+                  />
+                  <Pressable onPress={() => setShowConfirm(v => !v)} hitSlop={8}>
+                    <Text style={{ fontSize: 16, color: "#94a3b8" }}>{showConfirm ? "🙈" : "👁"}</Text>
+                  </Pressable>
+                </View>
+                <TouchableOpacity
+                  onPress={() => void handleChangePassword()}
+                  disabled={isChangingPassword || !newPassword.trim()}
+                  style={{
+                    backgroundColor: newPassword.trim() ? "#4f46e5" : "#e2e8f0",
+                    borderRadius: 12,
+                    paddingVertical: 13,
+                    alignItems: "center",
+                  }}
+                >
+                  {isChangingPassword
+                    ? <ActivityIndicator size="small" color="#ffffff" />
+                    : <Text style={{ color: newPassword.trim() ? "#ffffff" : "#94a3b8", fontWeight: "600", fontSize: 14 }}>Actualizar contraseña</Text>
+                  }
+                </TouchableOpacity>
+              </View>
+            )}
+          </Card>
+
+          {/* Zona de peligro */}
+          <SectionTitle label="Zona de peligro" />
+          <Card>
+            <CardRow icon="🗑️" label="Eliminar cuenta" onPress={confirmDeleteAccount} danger last />
+          </Card>
+
+          <Text style={{ fontSize: 11, color: "#cbd5e1", textAlign: "center", marginTop: 4 }}>
+            🔒 Tu información está protegida
+          </Text>
+
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
