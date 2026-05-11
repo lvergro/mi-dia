@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Alert } from "react-native";
 import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri } from "expo-auth-session";
+import * as Linking from "expo-linking";
 import { signIn, signUp, signOut, getGoogleOAuthUrl, setSessionFromOAuthCallback } from "@mi-dia/database";
 import { useSessionStore } from "./useSession";
 
@@ -81,7 +81,7 @@ export function useAuth() {
   async function handleGoogleSignIn(): Promise<void> {
     setState({ loading: true, error: null });
     try {
-      const redirectUri = makeRedirectUri({ scheme: "mi-dia" });
+      const redirectUri = Linking.createURL("/");
       const url = await getGoogleOAuthUrl(redirectUri);
       const result = await WebBrowser.openAuthSessionAsync(url, redirectUri);
       if (result.type === "success") {
