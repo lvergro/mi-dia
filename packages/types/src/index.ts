@@ -60,12 +60,14 @@ export interface DailyNote {
   id: string;
   user_id: string;
   content: string;
-  date: string;
-  created_at: string;
-  updated_at: string;
+  date: string; // "YYYY-MM-DD"
+  created_at: string; // timestamp — marca de tiempo de la entrada
 }
 
-export type DailyNoteInsert = Omit<DailyNote, "id" | "created_at" | "updated_at">;
+export type DailyNoteInsert = {
+  content: string;
+  date: string;
+};
 
 export type ItemType = "medication" | "activity";
 export type RecurrenceType = "daily" | "specific_days";

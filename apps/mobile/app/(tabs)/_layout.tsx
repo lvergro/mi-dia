@@ -31,17 +31,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="medications"
-        options={{
-          title: "Medicamentos",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>💊</Text>,
-        }}
-      />
-      <Tabs.Screen
         name="history"
         options={{
           title: "Historial",
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📋</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="notes"
+        options={{
+          title: "Notas",
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📝</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="medications"
+        options={{
+          title: "Medicamentos",
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>💊</Text>,
         }}
       />
     </Tabs>

@@ -13,7 +13,6 @@ export function useMood(date: string) {
   });
 
   const [mood, setMoodLocal] = useState<MoodValue | null>(null);
-  const [note, setNoteLocal] = useState<string>("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialized = useRef(false);
 
@@ -21,44 +20,27 @@ export function useMood(date: string) {
     if (savedMood !== undefined && !initialized.current) {
       initialized.current = true;
       setMoodLocal(savedMood?.mood ?? null);
-      setNoteLocal(savedMood?.note ?? "");
     }
   }, [savedMood]);
 
   const mutation = useMutation({
-    mutationFn: (values: { mood: MoodValue; note: string | null }) =>
-      upsertMood({ date, ...values }),
+    mutationFn: (value: MoodValue) =>
+      upsertMood({ date, mood: value, note: null }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey });
       void queryClient.invalidateQueries({ queryKey: ["history"] });
     },
   });
 
-  const scheduleAutoSave = useCallback(
-    (newMood: MoodValue | null, newNote: string) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      if (newMood === null) return;
-      debounceRef.current = setTimeout(() => {
-        mutation.mutate({ mood: newMood, note: newNote || null });
-      }, 2000);
-    },
-    [mutation],
-  );
-
   const setMood = useCallback(
     (value: MoodValue) => {
       setMoodLocal(value);
-      scheduleAutoSave(value, note);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        mutation.mutate(value);
+      }, 500);
     },
-    [note, scheduleAutoSave],
-  );
-
-  const setNote = useCallback(
-    (value: string) => {
-      setNoteLocal(value);
-      scheduleAutoSave(mood, value);
-    },
-    [mood, scheduleAutoSave],
+    [mutation],
   );
 
   useEffect(() => {
@@ -67,5 +49,5 @@ export function useMood(date: string) {
     };
   }, []);
 
-  return { mood, note, setMood, setNote, isSaving: mutation.isPending };
+  return { mood, setMood, isSaving: mutation.isPending };
 }

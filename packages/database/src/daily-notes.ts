@@ -1,25 +1,39 @@
-import type { DailyNote, DailyNoteInsert } from "@mi-dia/types";
 import { supabase } from "./client.js";
+import type { DailyNote, DailyNoteInsert } from "@mi-dia/types";
 
-export async function getDailyNote(userId: string, date: string): Promise<DailyNote | null> {
+export async function createNote(insert: DailyNoteInsert): Promise<DailyNote> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("daily_notes")
+    .insert({ ...insert, user_id: user.id })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as DailyNote;
+}
+
+export async function getNotesForDate(date: string): Promise<DailyNote[]> {
   const { data, error } = await supabase
     .from("daily_notes")
     .select("*")
-    .eq("user_id", userId)
     .eq("date", date)
-    .maybeSingle();
-
+    .order("created_at", { ascending: true });
   if (error) throw error;
-  return data as DailyNote | null;
+  return (data ?? []) as DailyNote[];
 }
 
-export async function upsertDailyNote(data: DailyNoteInsert): Promise<DailyNote> {
-  const { data: upserted, error } = await supabase
+export async function getAllNotes(): Promise<DailyNote[]> {
+  const { data, error } = await supabase
     .from("daily_notes")
-    .upsert(data, { onConflict: "user_id,date" })
-    .select()
-    .single();
-
+    .select("*")
+    .order("created_at", { ascending: false });
   if (error) throw error;
-  return upserted as DailyNote;
+  return (data ?? []) as DailyNote[];
+}
+
+export async function deleteNote(id: string): Promise<void> {
+  const { error } = await supabase.from("daily_notes").delete().eq("id", id);
+  if (error) throw error;
 }

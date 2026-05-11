@@ -16,8 +16,10 @@ import { useRouter } from "expo-router";
 import { useChecklist } from "../../hooks/useChecklist";
 import { useCreateLog, useDeleteLog } from "../../hooks/useLogMutations";
 import { useMood } from "../../hooks/useMood";
+import { useNotesForDate, useCreateNote, useDeleteNote } from "../../hooks/useNotes";
 import { MoodCard } from "../../components/mood/MoodCard";
 import type { ItemWithStatus, ItemBlock } from "@mi-dia/core";
+import type { DailyNote } from "@mi-dia/types";
 
 const BLOCK_ORDER: ItemBlock[] = ["mañana", "tarde", "noche"];
 const BLOCK_LABEL: Record<ItemBlock, string> = {
@@ -46,6 +48,13 @@ function formatDisplayDate(dateStr: string): string {
 
 function formatTime(specificTime: string): string {
   return specificTime.slice(0, 5);
+}
+
+function formatNoteTime(isoString: string): string {
+  const d = new Date(isoString);
+  const h = d.getHours().toString().padStart(2, "0");
+  const m = d.getMinutes().toString().padStart(2, "0");
+  return `${h}:${m}`;
 }
 
 interface ChecklistItemCardProps {
@@ -114,6 +123,105 @@ function ChecklistItemCard({ item, onTap, isPending }: ChecklistItemCardProps) {
   );
 }
 
+interface DayNotesSectionProps {
+  date: string;
+  readonly: boolean;
+}
+
+function DayNotesSection({ date, readonly }: DayNotesSectionProps) {
+  const { data: notes = [] } = useNotesForDate(date);
+  const createNote = useCreateNote(date);
+  const deleteNoteM = useDeleteNote(date);
+  const [text, setText] = useState("");
+
+  function handleAdd() {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    createNote.mutate(trimmed, { onSuccess: () => setText("") });
+  }
+
+  function handleDelete(note: DailyNote) {
+    Alert.alert("Eliminar nota", "¿Eliminar esta nota?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Eliminar", style: "destructive", onPress: () => deleteNoteM.mutate(note.id) },
+    ]);
+  }
+
+  return (
+    <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+      <Text style={{ fontSize: 13, fontWeight: "600", color: "#6b7280", marginBottom: 10 }}>
+        Notas del día
+      </Text>
+
+      {!readonly && (
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            placeholder="Escribe una nota…"
+            placeholderTextColor="#9ca3af"
+            multiline
+            style={{
+              flex: 1,
+              borderWidth: 1,
+              borderColor: "#e5e7eb",
+              borderRadius: 12,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              fontSize: 13,
+              color: "#111827",
+              minHeight: 60,
+              textAlignVertical: "top",
+              backgroundColor: "#ffffff",
+            }}
+          />
+          <Pressable
+            onPress={handleAdd}
+            disabled={createNote.isPending || !text.trim()}
+            style={({ pressed }) => ({
+              backgroundColor: text.trim() ? "#4f46e5" : "#e5e7eb",
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              justifyContent: "center",
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <Text style={{ color: text.trim() ? "#ffffff" : "#9ca3af", fontWeight: "600", fontSize: 13 }}>
+              + Agregar
+            </Text>
+          </Pressable>
+        </View>
+      )}
+
+      {notes.length === 0 && (
+        <Text style={{ fontSize: 12, color: "#9ca3af", fontStyle: "italic" }}>
+          {readonly ? "Sin notas para este día" : "Aún no hay notas para hoy"}
+        </Text>
+      )}
+
+      {notes.map((note) => (
+        <Pressable
+          key={note.id}
+          onLongPress={() => { if (!readonly) handleDelete(note); }}
+          style={{
+            backgroundColor: "#f9fafb",
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: "#e5e7eb",
+            padding: 12,
+            marginBottom: 8,
+          }}
+        >
+          <Text style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>
+            {formatNoteTime(note.created_at)}
+          </Text>
+          <Text style={{ fontSize: 13, color: "#374151" }}>{note.content}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 export default function MiDiaScreen() {
   const router = useRouter();
   const todayStr = getTodayLocal();
@@ -125,7 +233,7 @@ export default function MiDiaScreen() {
   const createLog = useCreateLog(viewDate);
   const deleteLog = useDeleteLog(viewDate);
 
-  const { mood, note: moodNote, setMood, setNote: setMoodNote, isSaving: isMoodSaving } = useMood(viewDate);
+  const { mood, setMood, isSaving: isMoodSaving } = useMood(viewDate);
 
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
@@ -139,7 +247,7 @@ export default function MiDiaScreen() {
   );
 
   function handleItemTap(item: ItemWithStatus): void {
-    if (!isToday) return; // solo lectura en días pasados
+    if (!isToday) return;
     if (item.status === "pending") {
       Alert.alert(
         item.name,
@@ -266,13 +374,14 @@ export default function MiDiaScreen() {
     return (
       <ScrollView
         className="flex-1 bg-surface"
-        contentContainerStyle={{ paddingHorizontal: 0 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor="#4f46e5" />
         }
       >
         {dateNavBar}
-        <View className="items-center px-8 pt-16 pb-8">
+        <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} readonly={!isToday} />
+        <View className="items-center px-8 pt-8 pb-8">
           {isToday ? (
             <>
               <Text className="text-5xl mb-4">☀️</Text>
@@ -298,15 +407,7 @@ export default function MiDiaScreen() {
             </>
           )}
         </View>
-        {isToday && (
-          <MoodCard
-            mood={mood}
-            note={moodNote}
-            onMoodChange={setMood}
-            onNoteChange={setMoodNote}
-            isSaving={isMoodSaving}
-          />
-        )}
+        <DayNotesSection date={viewDate} readonly={!isToday} />
       </ScrollView>
     );
   }
@@ -328,6 +429,7 @@ export default function MiDiaScreen() {
             </Text>
           </View>
         )}
+        <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} readonly={!isToday} />
         {BLOCK_ORDER.map((block) => (
           <View key={block} className="mx-4 mb-4 bg-white rounded-2xl border border-gray-100 overflow-hidden">
             <View className="px-4 pt-4 pb-2">
@@ -351,14 +453,7 @@ export default function MiDiaScreen() {
             </View>
           </View>
         ))}
-        <MoodCard
-          mood={mood}
-          note={moodNote}
-          onMoodChange={setMood}
-          onNoteChange={setMoodNote}
-          isSaving={isMoodSaving}
-          readonly={!isToday}
-        />
+        <DayNotesSection date={viewDate} readonly={!isToday} />
       </ScrollView>
 
       <Modal
