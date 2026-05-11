@@ -1,15 +1,5 @@
 import { Tabs } from "expo-router";
-import { Text, TouchableOpacity } from "react-native";
-import { useAuth } from "../../hooks/useAuth";
-
-function SignOutButton() {
-  const { signOut } = useAuth();
-  return (
-    <TouchableOpacity onPress={() => signOut()} style={{ marginRight: 16 }}>
-      <Text style={{ color: "#4f46e5", fontSize: 14 }}>Salir</Text>
-    </TouchableOpacity>
-  );
-}
+import { Text } from "react-native";
 
 export default function TabsLayout() {
   return (
@@ -27,7 +17,6 @@ export default function TabsLayout() {
         options={{
           title: "Mi Día",
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>☀️</Text>,
-          headerRight: () => <SignOutButton />,
         }}
       />
       <Tabs.Screen
@@ -49,6 +38,13 @@ export default function TabsLayout() {
         options={{
           title: "Medicamentos",
           tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>💊</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: "Mi Cuenta",
+          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>👤</Text>,
         }}
       />
     </Tabs>
