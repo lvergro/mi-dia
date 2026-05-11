@@ -77,8 +77,8 @@ function CardRow({
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: spacing.xl,
-        paddingVertical: 17,
+        paddingHorizontal: spacing.xxl,
+        paddingVertical: 18,
         backgroundColor: pressed && onPress ? colors.gray50 : colors.white,
         borderBottomWidth: last ? 0 : 1,
         borderBottomColor: colors.gray100,

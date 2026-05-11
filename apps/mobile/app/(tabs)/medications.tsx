@@ -434,14 +434,14 @@ export default function MedicationsScreen() {
       <FlatList
         data={sections}
         keyExtractor={(section) => section.key}
-        contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xl }}
+        contentContainerStyle={{ paddingBottom: spacing.xl }}
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor={colors.primary} />
         }
         ListHeaderComponent={listHeader}
         renderItem={({ item: section }) =>
           section.items.length === 0 ? null : (
-            <View style={{ marginBottom: spacing.lg }}>
+            <View style={{ marginBottom: spacing.lg, paddingHorizontal: spacing.lg }}>
               <Text
                 style={{
                   fontSize: 11,
