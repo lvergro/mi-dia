@@ -7,10 +7,16 @@ import {
   Text,
   View,
 } from "react-native";
-import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { ChevronDown, ChevronUp, TrendingUp, Flame, CheckCircle2 } from "lucide-react-native";
 import { useHistory } from "../../hooks/useHistory";
-import { colors, radii, shadows, spacing } from "../../theme";
+import { colors, radii, spacing } from "../../theme";
 import type { DayHistory, DayHistoryItem, DayItemStatus } from "@mi-dia/core";
+
+type PeriodTab = "week" | "month";
+
+const MOOD_EMOJI: Record<number, string> = {
+  1: "😢", 2: "😕", 3: "😐", 4: "🙂", 5: "😄",
+};
 
 function pctColor(pct: number): string {
   if (pct >= 80) return colors.success;
@@ -24,10 +30,10 @@ function pctBg(pct: number): string {
   return colors.dangerSubtle;
 }
 
-function statusIcon(status: DayItemStatus): string {
-  if (status === "done") return "✓";
-  if (status === "omitted") return "✗";
-  return "○";
+function dotColor(pct: number): string {
+  if (pct >= 80) return colors.success;
+  if (pct >= 50) return "#eab308";
+  return colors.danger;
 }
 
 function statusColor(status: DayItemStatus): string {
@@ -36,106 +42,95 @@ function statusColor(status: DayItemStatus): string {
   return colors.textMuted;
 }
 
-function formatDate(dateStr: string): string {
+function formatDayLabel(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+  const weekday = d.toLocaleDateString("es-ES", { weekday: "short" });
+  const day = d.getDate();
+  const month = d.toLocaleDateString("es-ES", { month: "short" });
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${day} ${month.charAt(0).toUpperCase()}${month.slice(1)}`;
 }
 
 function formatTime(time: string): string {
   return time.slice(0, 5);
 }
 
-const MOOD_COLORS: Record<number, string> = {
-  1: colors.mood1,
-  2: colors.mood2,
-  3: colors.mood3,
-  4: colors.mood4,
-  5: colors.mood5,
-};
-
-function WeeklySummaryCard({ data }: { data: DayHistory[] }) {
-  const last7 = data.slice(0, 7);
-  const avgPct = last7.length > 0
-    ? Math.round(last7.reduce((s, d) => s + d.pct, 0) / last7.length)
-    : 0;
-
-  let streak = 0;
+// Compute stats from data
+function computeStats(data: DayHistory[]) {
+  if (data.length === 0) return { adherencia: 0, racha: 0, done: 0, total: 0 };
+  const adherencia = Math.round(data.reduce((s, d) => s + d.pct, 0) / data.length);
+  let racha = 0;
   for (const day of data) {
-    if (day.pct >= 80) streak++;
+    if (day.pct >= 80) racha++;
     else break;
   }
+  const done = data.reduce((s, d) => s + d.done, 0);
+  const total = data.reduce((s, d) => s + d.total, 0);
+  return { adherencia, racha, done, total };
+}
 
-  const bestDay = last7.reduce((best, d) => d.pct > best.pct ? d : best, last7[0]);
+function StatsHeader({ data }: { data: DayHistory[] }) {
+  const { adherencia, racha, done, total } = computeStats(data);
 
   return (
     <View
       style={{
+        flexDirection: "row",
         marginHorizontal: spacing.lg,
         marginBottom: spacing.md,
-        borderRadius: radii.xl,
-        backgroundColor: colors.white,
-        borderWidth: 1,
-        borderColor: colors.cardBorder,
-        padding: spacing.lg,
-        ...shadows.card,
+        gap: spacing.sm,
       }}
     >
-      <Text style={{ fontSize: 11, fontWeight: "700", color: colors.textMuted, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: spacing.md }}>
-        Últimos 7 días
-      </Text>
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <View style={{ alignItems: "center", flex: 1 }}>
-          <View
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: pctBg(avgPct),
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text style={{ fontSize: 16, fontWeight: "700", color: pctColor(avgPct) }}>{avgPct}%</Text>
-          </View>
-          <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: "center" }}>Promedio</Text>
-        </View>
-        <View style={{ alignItems: "center", flex: 1 }}>
-          <View
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: streak > 0 ? colors.primarySubtle : colors.gray100,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 6,
-            }}
-          >
-            <Text style={{ fontSize: 16, fontWeight: "700", color: streak > 0 ? colors.primary : colors.textMuted }}>{streak}</Text>
-          </View>
-          <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: "center" }}>Racha ≥80%</Text>
-        </View>
-        {bestDay && (
-          <View style={{ alignItems: "center", flex: 1 }}>
-            <View
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                backgroundColor: colors.successSubtle,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 6,
-              }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: "700", color: colors.success, textAlign: "center" }}>
-                {bestDay.pct}%
-              </Text>
-            </View>
-            <Text style={{ fontSize: 11, color: colors.textMuted, textAlign: "center" }}>Mejor día</Text>
-          </View>
-        )}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.white,
+          borderRadius: radii.lg,
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+          padding: spacing.md,
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        <TrendingUp size={18} color={colors.primary} strokeWidth={1.8} />
+        <Text style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary }}>{adherencia}%</Text>
+        <Text style={{ fontSize: 10, color: colors.textMuted, textAlign: "center" }}>de adherencia</Text>
+      </View>
+
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.white,
+          borderRadius: radii.lg,
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+          padding: spacing.md,
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        <Flame size={18} color="#f59e0b" strokeWidth={1.8} />
+        <Text style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary }}>{racha}</Text>
+        <Text style={{ fontSize: 10, color: colors.textMuted, textAlign: "center" }}>Racha actual</Text>
+      </View>
+
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.white,
+          borderRadius: radii.lg,
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+          padding: spacing.md,
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        <CheckCircle2 size={18} color={colors.success} strokeWidth={1.8} />
+        <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
+          {done}/{total}
+        </Text>
+        <Text style={{ fontSize: 10, color: colors.textMuted, textAlign: "center" }}>tomas</Text>
       </View>
     </View>
   );
@@ -143,23 +138,31 @@ function WeeklySummaryCard({ data }: { data: DayHistory[] }) {
 
 function ItemRow({ item }: { item: DayHistoryItem }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.gray100 }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        paddingVertical: 6,
+      }}
+    >
       <View
         style={{
-          width: 24,
-          height: 24,
-          borderRadius: 12,
-          backgroundColor: item.status === "done" ? colors.successSubtle : item.status === "omitted" ? colors.dangerSubtle : colors.gray100,
+          width: 20,
+          height: 20,
+          borderRadius: 10,
+          backgroundColor:
+            item.status === "done" ? colors.successSubtle : item.status === "omitted" ? colors.dangerSubtle : colors.gray100,
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Text style={{ color: statusColor(item.status), fontSize: 12, fontWeight: "700" }}>
-          {statusIcon(item.status)}
+        <Text style={{ color: statusColor(item.status), fontSize: 11, fontWeight: "700" }}>
+          {item.status === "done" ? "✓" : item.status === "omitted" ? "✗" : "○"}
         </Text>
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 14, color: colors.textPrimary }}>{item.name}</Text>
+        <Text style={{ fontSize: 13, color: colors.textPrimary }}>{item.name}</Text>
         <Text style={{ fontSize: 11, color: colors.textMuted }}>{formatTime(item.scheduled_time)}</Text>
       </View>
     </View>
@@ -168,6 +171,9 @@ function ItemRow({ item }: { item: DayHistoryItem }) {
 
 function DayRow({ item }: { item: DayHistory }) {
   const [expanded, setExpanded] = useState(false);
+
+  const completados = item.items.filter((i) => i.status === "done");
+  const pendientes = item.items.filter((i) => i.status !== "done");
 
   return (
     <View
@@ -179,7 +185,6 @@ function DayRow({ item }: { item: DayHistory }) {
         borderWidth: 1,
         borderColor: colors.cardBorder,
         overflow: "hidden",
-        ...shadows.subtle,
       }}
     >
       <Pressable
@@ -190,31 +195,37 @@ function DayRow({ item }: { item: DayHistory }) {
           paddingHorizontal: spacing.lg,
           paddingVertical: spacing.md,
           backgroundColor: pressed ? colors.gray50 : colors.white,
+          gap: 10,
         })}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
-          {item.mood !== null && item.mood !== undefined ? (
-            <View
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: MOOD_COLORS[item.mood] ?? colors.gray300,
-              }}
-            />
-          ) : (
-            <View style={{ width: 8 }} />
-          )}
-          <Text style={{ fontSize: 14, color: colors.textPrimary, textTransform: "capitalize" }}>
-            {formatDate(item.date)}
+        {/* Color dot */}
+        <View
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            backgroundColor: dotColor(item.pct),
+            flexShrink: 0,
+          }}
+        />
+
+        {/* Day label + mood */}
+        <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Text style={{ fontSize: 14, color: colors.textPrimary, fontWeight: "500" }}>
+            {formatDayLabel(item.date)}
           </Text>
+          {item.mood !== null && item.mood !== undefined && (
+            <Text style={{ fontSize: 14 }}>{MOOD_EMOJI[item.mood]}</Text>
+          )}
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
+
+        {/* Score + badge + chevron */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text style={{ fontSize: 13, color: colors.textMuted }}>{item.done}/{item.total}</Text>
           <View
             style={{
-              paddingHorizontal: 10,
-              paddingVertical: 4,
+              paddingHorizontal: 9,
+              paddingVertical: 3,
               borderRadius: radii.full,
               backgroundColor: pctBg(item.pct),
             }}
@@ -229,11 +240,37 @@ function DayRow({ item }: { item: DayHistory }) {
       </Pressable>
 
       {expanded && (
-        <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.sm, borderTopWidth: 1, borderTopColor: colors.cardBorder }}>
+        <View
+          style={{
+            paddingHorizontal: spacing.lg,
+            paddingBottom: spacing.md,
+            borderTopWidth: 1,
+            borderTopColor: colors.cardBorder,
+          }}
+        >
           {item.items.length === 0 ? (
-            <Text style={{ fontSize: 13, color: colors.textMuted, paddingVertical: spacing.sm }}>Sin ítems registrados</Text>
+            <Text style={{ fontSize: 13, color: colors.textMuted, paddingVertical: spacing.sm }}>
+              Sin ítems registrados
+            </Text>
           ) : (
-            item.items.map((i) => <ItemRow key={i.item_id} item={i} />)
+            <>
+              {completados.length > 0 && (
+                <View style={{ marginTop: spacing.md }}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: colors.success, marginBottom: 6 }}>
+                    Completados ({completados.length})
+                  </Text>
+                  {completados.map((i) => <ItemRow key={i.item_id} item={i} />)}
+                </View>
+              )}
+              {pendientes.length > 0 && (
+                <View style={{ marginTop: completados.length > 0 ? spacing.md : spacing.md }}>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: colors.textMuted, marginBottom: 6 }}>
+                    Pendientes ({pendientes.length})
+                  </Text>
+                  {pendientes.map((i) => <ItemRow key={i.item_id} item={i} />)}
+                </View>
+              )}
+            </>
           )}
         </View>
       )}
@@ -243,6 +280,7 @@ function DayRow({ item }: { item: DayHistory }) {
 
 export default function HistoryScreen() {
   const { data, isLoading, isError, refetch, isFetching } = useHistory();
+  const [period, setPeriod] = useState<PeriodTab>("week");
 
   if (isLoading) {
     return (
@@ -261,23 +299,79 @@ export default function HistoryScreen() {
     );
   }
 
+  const periodData = (data ?? []).slice(0, period === "week" ? 7 : 30);
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface }}>
       {!data || data.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
           <Text style={{ fontSize: 40, marginBottom: 12 }}>📭</Text>
-          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.textPrimary, marginBottom: 6 }}>Sin historial aún</Text>
+          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.textPrimary, marginBottom: 6 }}>
+            Sin historial aún
+          </Text>
           <Text style={{ color: colors.textMuted, textAlign: "center", fontSize: 14 }}>
             Completa ítems en Mi Día para ver tu progreso aquí.
           </Text>
         </View>
       ) : (
         <FlatList
-          data={data}
+          data={periodData}
           keyExtractor={(item) => item.date}
           contentContainerStyle={{ paddingTop: spacing.md, paddingBottom: spacing.xxl }}
           refreshControl={<RefreshControl refreshing={isFetching} onRefresh={refetch} tintColor={colors.primary} />}
-          ListHeaderComponent={data.length >= 2 ? <WeeklySummaryCard data={data} /> : null}
+          ListHeaderComponent={
+            <View>
+              {/* Page title */}
+              <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.md }}>
+                <Text style={{ fontSize: 22, fontWeight: "700", color: colors.textPrimary }}>Historial</Text>
+                <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
+                  Revisa tu adherencia y tu registro diario
+                </Text>
+              </View>
+
+              {/* Stats row */}
+              <StatsHeader data={periodData} />
+
+              {/* Period tabs */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginHorizontal: spacing.lg,
+                  marginBottom: spacing.md,
+                  backgroundColor: colors.gray100,
+                  borderRadius: radii.lg,
+                  padding: 3,
+                }}
+              >
+                {(["week", "month"] as PeriodTab[]).map((tab) => {
+                  const active = period === tab;
+                  return (
+                    <Pressable
+                      key={tab}
+                      onPress={() => setPeriod(tab)}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 8,
+                        borderRadius: radii.md,
+                        backgroundColor: active ? colors.white : "transparent",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: active ? "600" : "400",
+                          color: active ? colors.textPrimary : colors.textMuted,
+                        }}
+                      >
+                        {tab === "week" ? "Semana" : "Mes"}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          }
           renderItem={({ item }) => <DayRow item={item} />}
         />
       )}
