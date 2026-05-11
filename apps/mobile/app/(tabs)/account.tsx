@@ -77,8 +77,8 @@ function CardRow({
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: spacing.lg,
-        paddingVertical: 14,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: 17,
         backgroundColor: pressed && onPress ? colors.gray50 : colors.white,
         borderBottomWidth: last ? 0 : 1,
         borderBottomColor: colors.gray100,
@@ -92,7 +92,7 @@ function CardRow({
           backgroundColor: danger ? colors.dangerSubtle : colors.primarySubtle,
           alignItems: "center",
           justifyContent: "center",
-          marginRight: 12,
+          marginRight: 14,
         }}
       >
         <Icon size={17} color={danger ? colors.danger : colors.primary} strokeWidth={1.8} />
