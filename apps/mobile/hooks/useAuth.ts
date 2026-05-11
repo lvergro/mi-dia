@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Alert } from "react-native";
-import { signIn, signUp, signOut } from "@mi-dia/database";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
+import { signIn, signUp, signOut, getGoogleOAuthUrl, exchangeOAuthCode } from "@mi-dia/database";
 import { useSessionStore } from "./useSession";
 
 interface AuthState {
@@ -76,6 +78,24 @@ export function useAuth() {
     }
   }
 
+  async function handleGoogleSignIn(): Promise<void> {
+    setState({ loading: true, error: null });
+    try {
+      const redirectUri = makeRedirectUri({ scheme: "mi-dia" });
+      const url = await getGoogleOAuthUrl(redirectUri);
+      const result = await WebBrowser.openAuthSessionAsync(url, redirectUri);
+      if (result.type === "success") {
+        const session = await exchangeOAuthCode(result.url);
+        useSessionStore.getState().setSession(session);
+      }
+      setState({ loading: false, error: null });
+    } catch (err) {
+      const msg = friendlyError(err);
+      setState({ loading: false, error: msg });
+      Alert.alert("Error con Google", msg);
+    }
+  }
+
   return {
     loading: state.loading,
     error: state.error,
@@ -83,5 +103,6 @@ export function useAuth() {
     signIn: handleSignIn,
     signUp: handleSignUp,
     signOut: handleSignOut,
+    signInWithGoogle: handleGoogleSignIn,
   };
 }

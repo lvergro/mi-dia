@@ -38,6 +38,21 @@ export async function deleteAccount(): Promise<void> {
   if (error) throw error;
 }
 
+export async function getGoogleOAuthUrl(redirectTo: string): Promise<string> {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo, skipBrowserRedirect: true },
+  });
+  if (error) throw error;
+  return data.url!;
+}
+
+export async function exchangeOAuthCode(url: string): Promise<Session> {
+  const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+  if (error) throw error;
+  return data.session!;
+}
+
 export function onAuthStateChange(
   callback: (event: AuthChangeEvent, session: Session | null) => void
 ): { unsubscribe: () => void } {
