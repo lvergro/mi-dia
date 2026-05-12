@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { Activity, Pill, Search } from "lucide-react-native";
@@ -257,44 +258,6 @@ export default function MedicationsScreen() {
 
   const listHeader = (
     <View style={{ backgroundColor: colors.surface }}>
-      {/* Title row */}
-      <View
-        style={{
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.xl,
-          paddingBottom: spacing.sm,
-          flexDirection: "row",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          backgroundColor: colors.white,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.cardBorder,
-        }}
-      >
-        <View style={{ flex: 1, marginRight: spacing.md }}>
-          <Text style={{ fontSize: 22, fontWeight: "700", color: colors.textPrimary }}>Rutina</Text>
-          <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
-            Organiza tus medicamentos y actividades
-          </Text>
-        </View>
-        <Pressable
-          style={({ pressed }) => ({
-            backgroundColor: pressed ? colors.primaryDark : colors.primary,
-            borderRadius: radii.md,
-            paddingHorizontal: spacing.md,
-            paddingVertical: 8,
-            alignItems: "center",
-            justifyContent: "center",
-            marginTop: 2,
-            opacity: isMutating ? 0.6 : 1,
-          })}
-          onPress={openCreate}
-          disabled={isMutating}
-        >
-          <Text style={{ color: colors.white, fontWeight: "600", fontSize: 14 }}>+ Nuevo ítem</Text>
-        </Pressable>
-      </View>
-
       {/* Search bar */}
       <View
         style={{
@@ -406,9 +369,50 @@ export default function MedicationsScreen() {
     </View>
   );
 
+  const titleBar = (
+    <View
+      style={{
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.xl,
+        paddingBottom: spacing.sm,
+        flexDirection: "row",
+        alignItems: "flex-start",
+        justifyContent: "space-between",
+        backgroundColor: colors.white,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.cardBorder,
+      }}
+    >
+      <View style={{ flex: 1, marginRight: spacing.md }}>
+        <Text style={{ fontSize: 22, fontWeight: "700", color: colors.textPrimary }}>Rutina</Text>
+        <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 2 }}>
+          Organiza tus medicamentos y actividades
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={{
+          backgroundColor: colors.primary,
+          borderRadius: radii.md,
+          paddingHorizontal: spacing.md,
+          paddingVertical: 8,
+          alignItems: "center",
+          justifyContent: "center",
+          marginTop: 2,
+          opacity: isMutating ? 0.6 : 1,
+        }}
+        onPress={openCreate}
+        disabled={isMutating}
+        activeOpacity={0.7}
+      >
+        <Text style={{ color: colors.white, fontWeight: "600", fontSize: 14 }}>+ Nuevo ítem</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.surface }}>
+        {titleBar}
         {listHeader}
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -420,6 +424,7 @@ export default function MedicationsScreen() {
   if (isError) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.surface }}>
+        {titleBar}
         {listHeader}
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }}>
           <Text style={{ fontSize: 36, marginBottom: 12 }}>⚠️</Text>
@@ -431,6 +436,7 @@ export default function MedicationsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      {titleBar}
       <FlatList
         data={sections}
         keyExtractor={(section) => section.key}

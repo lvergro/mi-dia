@@ -5,7 +5,6 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Text,
   TextInput,
@@ -53,6 +52,13 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+const cardRowStyle = {
+  flexDirection: "row" as const,
+  alignItems: "center" as const,
+  paddingHorizontal: spacing.xxl,
+  paddingVertical: 18,
+};
+
 function CardRow({
   icon: Icon,
   label,
@@ -70,20 +76,8 @@ function CardRow({
   danger?: boolean;
   last?: boolean;
 }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={!onPress}
-      style={({ pressed }) => ({
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: spacing.xxl,
-        paddingVertical: 18,
-        backgroundColor: pressed && onPress ? colors.gray50 : colors.white,
-        borderBottomWidth: last ? 0 : 1,
-        borderBottomColor: colors.gray100,
-      })}
-    >
+  const inner = (
+    <>
       <View
         style={{
           width: 34,
@@ -113,7 +107,30 @@ function CardRow({
       {onPress && value === undefined && (
         <Text style={{ fontSize: 20, color: colors.gray300, lineHeight: 24 }}>›</Text>
       )}
-    </Pressable>
+    </>
+  );
+
+  const borderStyle = {
+    borderBottomWidth: last ? 0 : 1,
+    borderBottomColor: colors.gray100,
+  };
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        style={[cardRowStyle, borderStyle]}
+      >
+        {inner}
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={[cardRowStyle, borderStyle]}>
+      {inner}
+    </View>
   );
 }
 
