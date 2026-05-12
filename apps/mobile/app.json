@@ -24,6 +24,7 @@
         "backgroundColor": "#2fcfc2"
       },
       "package": "com.midia.app",
+      "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED"
       ]
