@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
+  Keyboard,
+  type KeyboardEvent,
   Pressable,
   RefreshControl,
   SectionList,
@@ -117,6 +117,15 @@ function NoteRow({ note, onDelete }: { note: DailyNote; onDelete: () => void }) 
   );
 }
 
+function useKeyboardHeight(): number {
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", (e: KeyboardEvent) => setHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+  return height;
+}
 
 export default function NotesScreen() {
   const today = getTodayLocal();
@@ -125,6 +134,7 @@ export default function NotesScreen() {
   const { data: allNotes = [], isLoading, isError, refetch: refetchAll, isFetching } = useAllNotes();
   const createNote = useCreateNote(today);
   const deleteNoteM = useDeleteNote(today);
+  const keyboardHeight = useKeyboardHeight();
 
   const [text, setText] = useState("");
   const [noteMood, setNoteMood] = useState<MoodValue | null>(null);
@@ -169,10 +179,7 @@ export default function NotesScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.surface }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.surface, paddingBottom: keyboardHeight }}>
       <SectionList
         style={{ flex: 1 }}
         sections={sections}
@@ -264,6 +271,6 @@ export default function NotesScreen() {
           </Pressable>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
