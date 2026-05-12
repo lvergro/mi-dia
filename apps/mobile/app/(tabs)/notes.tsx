@@ -140,7 +140,8 @@ function NoteRow({ note, onDelete }: { note: DailyNote; onDelete: () => void }) 
     <Pressable
       onLongPress={onDelete}
       style={({ pressed }) => ({
-        marginHorizontal: spacing.lg,
+        marginLeft: spacing.xxl,
+        marginRight: spacing.lg,
         marginTop: spacing.sm,
         flexDirection: "row",
         backgroundColor: colors.white,
