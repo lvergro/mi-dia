@@ -2,8 +2,6 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   RefreshControl,
   SectionList,
@@ -169,10 +167,7 @@ export default function NotesScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.surface }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <SectionList
         style={{ flex: 1 }}
         sections={sections}
@@ -181,20 +176,70 @@ export default function NotesScreen() {
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
-        contentContainerStyle={{ paddingBottom: spacing.lg }}
+        contentContainerStyle={{ paddingBottom: spacing.xxl }}
         ListHeaderComponent={
           <View style={{ backgroundColor: colors.surface }}>
             <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} />
-            {sections.length === 0 && (
-              <View style={{ alignItems: "center", paddingTop: 48, paddingBottom: 20, paddingHorizontal: 32 }}>
-                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.primarySubtle, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                  <Text style={{ fontSize: 32 }}>📝</Text>
-                </View>
-                <Text style={{ fontSize: 18, fontWeight: "700", color: colors.textPrimary, textAlign: "center", marginBottom: 8 }}>
-                  Empieza a escribir
+
+            {/* Input de nueva nota */}
+            <View style={{
+              marginHorizontal: spacing.lg,
+              marginBottom: spacing.lg,
+              backgroundColor: colors.white,
+              borderRadius: radii.lg,
+              borderWidth: 1,
+              borderColor: colors.cardBorder,
+              padding: spacing.md,
+              ...shadows.card,
+            }}>
+              <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
+              <TextInput
+                value={text}
+                onChangeText={setText}
+                placeholder="¿Qué tienes en mente hoy?"
+                placeholderTextColor={colors.textMuted}
+                multiline
+                style={{
+                  borderWidth: 1,
+                  borderColor: text ? colors.primary : colors.cardBorder,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: 10,
+                  fontSize: 14,
+                  color: colors.textPrimary,
+                  minHeight: 72,
+                  maxHeight: 140,
+                  textAlignVertical: "top",
+                  backgroundColor: colors.white,
+                  marginBottom: spacing.sm,
+                }}
+              />
+              <Pressable
+                onPress={handleAdd}
+                disabled={createNote.isPending || !text.trim()}
+                style={({ pressed }) => ({
+                  backgroundColor: text.trim() ? colors.primary : colors.gray200,
+                  borderRadius: radii.md,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: 6,
+                  opacity: pressed ? 0.8 : 1,
+                })}
+              >
+                <Send size={14} color={text.trim() ? colors.white : colors.textMuted} strokeWidth={2} />
+                <Text style={{ color: text.trim() ? colors.white : colors.textMuted, fontWeight: "700", fontSize: 14 }}>
+                  Guardar nota
                 </Text>
-                <Text style={{ color: colors.textMuted, textAlign: "center", fontSize: 14, lineHeight: 20, marginBottom: 12 }}>
-                  Registra cómo te sentiste hoy. Tus notas te ayudarán a reconocer patrones con el tiempo.
+              </Pressable>
+            </View>
+
+            {sections.length === 0 && (
+              <View style={{ alignItems: "center", paddingTop: 32, paddingHorizontal: 32 }}>
+                <Text style={{ fontSize: 32, marginBottom: 8 }}>📝</Text>
+                <Text style={{ fontSize: 15, color: colors.textMuted, textAlign: "center" }}>
+                  Tus notas aparecerán aquí
                 </Text>
               </View>
             )}
@@ -211,59 +256,6 @@ export default function NotesScreen() {
           <NoteRow note={item} onDelete={() => handleDelete(item)} />
         )}
       />
-
-      <View style={{
-        borderTopWidth: 1,
-        borderTopColor: colors.cardBorder,
-        backgroundColor: colors.white,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.sm,
-        paddingBottom: spacing.md,
-        ...shadows.subtle,
-      }}>
-        <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
-        <View style={{ flexDirection: "row", gap: spacing.sm, alignItems: "flex-end" }}>
-          <TextInput
-            value={text}
-            onChangeText={setText}
-            placeholder="¿Qué tienes en mente hoy?"
-            placeholderTextColor={colors.textMuted}
-            multiline
-            style={{
-              flex: 1,
-              borderWidth: 1,
-              borderColor: text ? colors.primary : colors.cardBorder,
-              borderRadius: radii.md,
-              paddingHorizontal: spacing.md,
-              paddingVertical: 10,
-              fontSize: 14,
-              color: colors.textPrimary,
-              maxHeight: 100,
-              textAlignVertical: "top",
-              backgroundColor: colors.white,
-            }}
-          />
-          <Pressable
-            onPress={handleAdd}
-            disabled={createNote.isPending || !text.trim()}
-            style={({ pressed }) => ({
-              backgroundColor: text.trim() ? colors.primary : colors.gray200,
-              borderRadius: radii.md,
-              paddingHorizontal: spacing.md,
-              paddingVertical: 11,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 5,
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Send size={14} color={text.trim() ? colors.white : colors.textMuted} strokeWidth={2} />
-            <Text style={{ color: text.trim() ? colors.white : colors.textMuted, fontWeight: "700", fontSize: 13 }}>
-              Guardar
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
