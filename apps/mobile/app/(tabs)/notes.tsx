@@ -193,46 +193,44 @@ export default function NotesScreen() {
               ...shadows.card,
             }}>
               <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
-              <TextInput
-                value={text}
-                onChangeText={setText}
-                placeholder="¿Qué tienes en mente hoy?"
-                placeholderTextColor={colors.textMuted}
-                multiline
-                style={{
-                  borderWidth: 1,
-                  borderColor: text ? colors.primary : colors.cardBorder,
-                  borderRadius: radii.md,
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: 10,
-                  fontSize: 14,
-                  color: colors.textPrimary,
-                  minHeight: 72,
-                  maxHeight: 140,
-                  textAlignVertical: "top",
-                  backgroundColor: colors.white,
-                  marginBottom: spacing.sm,
-                }}
-              />
-              <Pressable
-                onPress={handleAdd}
-                disabled={createNote.isPending || !text.trim()}
-                style={({ pressed }) => ({
-                  backgroundColor: text.trim() ? colors.primary : colors.gray200,
-                  borderRadius: radii.md,
-                  paddingVertical: 12,
-                  alignItems: "center",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  gap: 6,
-                  opacity: pressed ? 0.8 : 1,
-                })}
-              >
-                <Send size={14} color={text.trim() ? colors.white : colors.textMuted} strokeWidth={2} />
-                <Text style={{ color: text.trim() ? colors.white : colors.textMuted, fontWeight: "700", fontSize: 14 }}>
-                  Guardar nota
-                </Text>
-              </Pressable>
+              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: spacing.sm }}>
+                <TextInput
+                  value={text}
+                  onChangeText={setText}
+                  placeholder="¿Qué tienes en mente hoy?"
+                  placeholderTextColor={colors.textMuted}
+                  multiline
+                  style={{
+                    flex: 1,
+                    borderWidth: 1,
+                    borderColor: text ? colors.primary : colors.cardBorder,
+                    borderRadius: radii.md,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: 10,
+                    fontSize: 14,
+                    color: colors.textPrimary,
+                    minHeight: 72,
+                    maxHeight: 140,
+                    textAlignVertical: "top",
+                    backgroundColor: colors.white,
+                  }}
+                />
+                <Pressable
+                  onPress={handleAdd}
+                  disabled={createNote.isPending || !text.trim()}
+                  style={({ pressed }) => ({
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: text.trim() ? colors.primary : colors.gray200,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: pressed ? 0.75 : 1,
+                  })}
+                >
+                  <Send size={18} color={text.trim() ? colors.white : colors.textMuted} strokeWidth={2} />
+                </Pressable>
+              </View>
             </View>
 
             {sections.length === 0 && (
