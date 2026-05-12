@@ -135,6 +135,7 @@ export default function NotesScreen() {
   const createNote = useCreateNote(today);
   const deleteNoteM = useDeleteNote(today);
   const keyboardHeight = useKeyboardHeight();
+  const [inputBarHeight, setInputBarHeight] = useState(120);
 
   const [text, setText] = useState("");
   const [noteMood, setNoteMood] = useState<MoodValue | null>(null);
@@ -179,7 +180,7 @@ export default function NotesScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.surface, paddingBottom: keyboardHeight }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <SectionList
         style={{ flex: 1 }}
         sections={sections}
@@ -188,7 +189,7 @@ export default function NotesScreen() {
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
-        contentContainerStyle={{ paddingBottom: spacing.lg }}
+        contentContainerStyle={{ paddingBottom: inputBarHeight + spacing.lg }}
         ListHeaderComponent={
           <View style={{ backgroundColor: colors.surface }}>
             <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} />
@@ -219,15 +220,22 @@ export default function NotesScreen() {
         )}
       />
 
-      <View style={{
-        borderTopWidth: 1,
-        borderTopColor: colors.cardBorder,
-        backgroundColor: colors.white,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.sm,
-        paddingBottom: spacing.md,
-        ...shadows.subtle,
-      }}>
+      <View
+        onLayout={(e) => setInputBarHeight(e.nativeEvent.layout.height)}
+        style={{
+          position: "absolute",
+          bottom: keyboardHeight,
+          left: 0,
+          right: 0,
+          borderTopWidth: 1,
+          borderTopColor: colors.cardBorder,
+          backgroundColor: colors.white,
+          paddingHorizontal: spacing.lg,
+          paddingTop: spacing.sm,
+          paddingBottom: spacing.md,
+          ...shadows.subtle,
+        }}
+      >
         <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
         <View style={{ flexDirection: "row", gap: spacing.sm, alignItems: "flex-end" }}>
           <TextInput
