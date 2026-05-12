@@ -7,6 +7,7 @@ import {
   SectionList,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useAllNotes, useNotesForDate, useCreateNote, useDeleteNote } from "../../hooks/useNotes";
@@ -188,25 +189,24 @@ export default function NotesScreen() {
           <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
             Nueva nota
           </Text>
-          <Pressable
+          <TouchableOpacity
             onPress={handleAdd}
             disabled={createNote.isPending || !text.trim()}
-            style={({ pressed }) => ({
-              backgroundColor: text.trim() ? colors.primary : colors.gray200,
+            activeOpacity={0.7}
+            style={{
+              backgroundColor: colors.primary,
               borderRadius: radii.md,
-              paddingHorizontal: spacing.lg,
-              paddingVertical: 10,
-              opacity: pressed ? 0.8 : 1,
-            })}
+              paddingHorizontal: spacing.md,
+              paddingVertical: 8,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: createNote.isPending || !text.trim() ? 0.6 : 1,
+            }}
           >
-            <Text style={{
-              color: text.trim() ? colors.white : colors.textMuted,
-              fontWeight: "700",
-              fontSize: 14,
-            }}>
+            <Text style={{ color: colors.white, fontWeight: "600", fontSize: 14 }}>
               {createNote.isPending ? "Guardando…" : "Guardar"}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
 
         <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
