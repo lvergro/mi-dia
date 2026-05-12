@@ -179,7 +179,7 @@ function DayRow({ item }: { item: DayHistory }) {
     <View
       style={{
         marginHorizontal: spacing.lg,
-        marginBottom: spacing.sm,
+        marginBottom: spacing.md,
         backgroundColor: colors.white,
         borderRadius: radii.lg,
         borderWidth: 1,
@@ -192,10 +192,10 @@ function DayRow({ item }: { item: DayHistory }) {
         style={({ pressed }) => ({
           flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: spacing.md,
-          paddingVertical: 14,
+          paddingHorizontal: spacing.lg,
+          paddingVertical: 18,
           backgroundColor: pressed ? colors.gray50 : colors.white,
-          gap: 10,
+          gap: 12,
         })}
       >
         {/* Color dot */}
@@ -242,8 +242,8 @@ function DayRow({ item }: { item: DayHistory }) {
       {expanded && (
         <View
           style={{
-            paddingHorizontal: spacing.md,
-            paddingBottom: spacing.md,
+            paddingHorizontal: spacing.lg,
+            paddingBottom: spacing.lg,
             borderTopWidth: 1,
             borderTopColor: colors.cardBorder,
           }}

@@ -369,7 +369,7 @@ export default function NotesScreen() {
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
         ListHeaderComponent={
           <View style={{ backgroundColor: colors.surface }}>
             <MoodCard mood={mood} onMoodChange={handleMoodChange} isSaving={isMoodSaving} />
@@ -393,14 +393,13 @@ export default function NotesScreen() {
               onPress={() => toggleCollapse(section.title)}
               style={({ pressed }) => ({
                 backgroundColor: pressed ? colors.gray50 : colors.surface,
-                paddingHorizontal: spacing.lg,
-                paddingVertical: spacing.sm,
-                paddingTop: spacing.md,
+                paddingHorizontal: spacing.xl,
+                paddingVertical: spacing.md,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.cardBorder,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 8,
+                gap: 10,
               })}
             >
               <Text style={{ fontSize: 13, fontWeight: "700", color: colors.textPrimary, flex: 1 }}>
