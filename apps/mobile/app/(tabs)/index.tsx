@@ -18,10 +18,19 @@ import { Activity, Pill } from "lucide-react-native";
 import { useChecklist } from "../../hooks/useChecklist";
 import { useCreateLog, useDeleteLog } from "../../hooks/useLogMutations";
 import { useMood } from "../../hooks/useMood";
+import { useCreateNote } from "../../hooks/useNotes";
 import { MoodCard } from "../../components/mood/MoodCard";
 import { colors, radii, spacing } from "../../theme";
 import type { ItemWithStatus, ItemBlock, GroupedChecklist } from "@mi-dia/core";
 import type { MoodValue } from "@mi-dia/types";
+
+const MOOD_NOTE_LABEL: Record<MoodValue, string> = {
+  1: "😢 Muy mal",
+  2: "😕 Mal",
+  3: "😐 Normal",
+  4: "🙂 Bien",
+  5: "😄 Excelente",
+};
 
 const BLOCK_ORDER: ItemBlock[] = ["mañana", "tarde", "noche"];
 const BLOCK_LABEL: Record<ItemBlock, string> = {
@@ -315,6 +324,13 @@ export default function MiDiaScreen() {
   const createLog = useCreateLog(viewDate);
   const deleteLog = useDeleteLog(viewDate);
   const { mood, setMood, isSaving: isSavingMood } = useMood(viewDate);
+  const createMoodNote = useCreateNote(viewDate);
+
+  function handleMoodChange(m: MoodValue) {
+    if (m === mood) return;
+    setMood(m);
+    createMoodNote.mutate({ content: `Estado de ánimo: ${MOOD_NOTE_LABEL[m]}`, mood: m });
+  }
 
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [noteText, setNoteText] = useState("");
@@ -556,7 +572,7 @@ export default function MiDiaScreen() {
         <ProgressBanner done={doneItems} total={totalItems} checklist={checklist} isToday={isToday} />
 
         {isToday && (
-          <MoodCard mood={mood as MoodValue | null} onMoodChange={setMood} isSaving={isSavingMood} />
+          <MoodCard mood={mood as MoodValue | null} onMoodChange={handleMoodChange} isSaving={isSavingMood} />
         )}
 
         {!isToday && (

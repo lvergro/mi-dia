@@ -32,13 +32,18 @@ function formatNoteTime(isoString: string): string {
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
 
-const MOOD_OPTIONS: { value: MoodValue; emoji: string; color: string; bg: string }[] = [
-  { value: 1, emoji: "😢", color: colors.mood1, bg: colors.dangerSubtle },
-  { value: 2, emoji: "😕", color: colors.mood2, bg: colors.warningSubtle },
-  { value: 3, emoji: "😐", color: colors.mood3, bg: "#fefce8" },
-  { value: 4, emoji: "🙂", color: colors.mood4, bg: colors.successSubtle },
-  { value: 5, emoji: "😄", color: colors.mood5, bg: colors.infoSubtle },
+const MOOD_OPTIONS: { value: MoodValue; emoji: string; label: string; color: string; bg: string }[] = [
+  { value: 1, emoji: "😢", label: "Muy mal",   color: colors.mood1, bg: colors.dangerSubtle },
+  { value: 2, emoji: "😕", label: "Mal",       color: colors.mood2, bg: colors.warningSubtle },
+  { value: 3, emoji: "😐", label: "Normal",    color: colors.mood3, bg: "#fefce8" },
+  { value: 4, emoji: "🙂", label: "Bien",      color: colors.mood4, bg: colors.successSubtle },
+  { value: 5, emoji: "😄", label: "Excelente", color: colors.mood5, bg: colors.infoSubtle },
 ];
+
+function formatMoodNote(m: MoodValue): string {
+  const opt = MOOD_OPTIONS.find((o) => o.value === m);
+  return `Estado de ánimo: ${opt?.emoji ?? ""} ${opt?.label ?? ""}`.trim();
+}
 
 function groupByDate(notes: DailyNote[]): { title: string; data: DailyNote[] }[] {
   const map = new Map<string, DailyNote[]>();
@@ -125,14 +130,19 @@ export default function NotesScreen() {
   const deleteNoteM = useDeleteNote(today);
 
   const [text, setText] = useState("");
-  const [noteMood, setNoteMood] = useState<MoodValue | null>(null);
+
+  function handleMoodChange(m: MoodValue) {
+    if (m === mood) return; // evitar crear nota duplicada si tap el mismo mood
+    setMood(m);
+    createNote.mutate({ content: formatMoodNote(m), mood: m });
+  }
 
   function handleAdd() {
     const trimmed = text.trim();
     if (!trimmed) return;
     createNote.mutate(
-      { content: trimmed, mood: noteMood },
-      { onSuccess: () => { setText(""); setNoteMood(null); } },
+      { content: trimmed, mood: mood ?? null },
+      { onSuccess: () => { setText(""); } },
     );
   }
 
@@ -209,7 +219,7 @@ export default function NotesScreen() {
           </TouchableOpacity>
         </View>
 
-        <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
+        <MiniMoodPicker selected={mood ?? null} onSelect={(v) => v && handleMoodChange(v)} />
 
         <TextInput
           value={text}
@@ -244,7 +254,7 @@ export default function NotesScreen() {
         contentContainerStyle={{ paddingBottom: spacing.xxl }}
         ListHeaderComponent={
           <View style={{ backgroundColor: colors.surface }}>
-            <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} />
+            <MoodCard mood={mood} onMoodChange={handleMoodChange} isSaving={isMoodSaving} />
 
             {sections.length === 0 && (
               <View style={{ alignItems: "center", paddingTop: 32, paddingHorizontal: 32 }}>
