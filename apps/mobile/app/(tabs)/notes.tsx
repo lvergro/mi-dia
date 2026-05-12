@@ -140,8 +140,7 @@ function NoteRow({ note, onDelete }: { note: DailyNote; onDelete: () => void }) 
     <Pressable
       onLongPress={onDelete}
       style={({ pressed }) => ({
-        marginLeft: spacing.xxl,
-        marginRight: spacing.lg,
+        marginHorizontal: spacing.xxl,
         marginTop: spacing.sm,
         flexDirection: "row",
         backgroundColor: colors.white,
@@ -393,7 +392,7 @@ export default function NotesScreen() {
               onPress={() => toggleCollapse(section.title)}
               style={({ pressed }) => ({
                 backgroundColor: pressed ? colors.gray50 : colors.surface,
-                paddingHorizontal: spacing.lg,
+                paddingHorizontal: spacing.xxl,
                 paddingVertical: spacing.sm,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.cardBorder,
