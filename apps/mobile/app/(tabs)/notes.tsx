@@ -365,10 +365,11 @@ export default function NotesScreen() {
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="handled"
         stickySectionHeadersEnabled={true}
+        showsVerticalScrollIndicator={true}
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
-        contentContainerStyle={{ paddingBottom: spacing.xxl }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         ListHeaderComponent={
           <View style={{ backgroundColor: colors.surface }}>
             <MoodCard mood={mood} onMoodChange={handleMoodChange} isSaving={isMoodSaving} />
@@ -394,6 +395,7 @@ export default function NotesScreen() {
                 backgroundColor: pressed ? colors.gray50 : colors.surface,
                 paddingHorizontal: spacing.lg,
                 paddingVertical: spacing.sm,
+                paddingTop: spacing.md,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.cardBorder,
                 flexDirection: "row",

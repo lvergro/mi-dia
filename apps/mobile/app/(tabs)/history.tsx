@@ -192,8 +192,8 @@ function DayRow({ item }: { item: DayHistory }) {
         style={({ pressed }) => ({
           flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: spacing.xxl,
-          paddingVertical: 18,
+          paddingHorizontal: spacing.md,
+          paddingVertical: 14,
           backgroundColor: pressed ? colors.gray50 : colors.white,
           gap: 10,
         })}
@@ -242,7 +242,7 @@ function DayRow({ item }: { item: DayHistory }) {
       {expanded && (
         <View
           style={{
-            paddingHorizontal: spacing.xxl,
+            paddingHorizontal: spacing.md,
             paddingBottom: spacing.md,
             borderTopWidth: 1,
             borderTopColor: colors.cardBorder,
@@ -317,7 +317,7 @@ export default function HistoryScreen() {
         <FlatList
           data={periodData}
           keyExtractor={(item) => item.date}
-          contentContainerStyle={{ paddingTop: spacing.md, paddingBottom: spacing.xxl }}
+          contentContainerStyle={{ paddingTop: spacing.md, paddingBottom: 100 }}
           refreshControl={<RefreshControl refreshing={isFetching} onRefresh={refetch} tintColor={colors.primary} />}
           ListHeaderComponent={
             <View>
