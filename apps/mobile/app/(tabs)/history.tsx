@@ -192,8 +192,8 @@ function DayRow({ item }: { item: DayHistory }) {
         style={({ pressed }) => ({
           flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.xxl,
+          paddingVertical: 18,
           backgroundColor: pressed ? colors.gray50 : colors.white,
           gap: 10,
         })}
@@ -242,7 +242,7 @@ function DayRow({ item }: { item: DayHistory }) {
       {expanded && (
         <View
           style={{
-            paddingHorizontal: spacing.lg,
+            paddingHorizontal: spacing.xxl,
             paddingBottom: spacing.md,
             borderTopWidth: 1,
             borderTopColor: colors.cardBorder,

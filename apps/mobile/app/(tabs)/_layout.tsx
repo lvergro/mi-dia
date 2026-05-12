@@ -33,7 +33,7 @@ function HeaderLeft() {
     <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 16, gap: 8 }}>
       <Image
         source={require("../../assets/icon.png")}
-        style={{ width: 30, height: 30, borderRadius: 8 }}
+        style={{ width: 26, height: 26, borderRadius: 6 }}
         resizeMode="contain"
       />
       <Text style={{ fontSize: 17, fontWeight: "700", color: colors.primary, letterSpacing: -0.3 }}>
