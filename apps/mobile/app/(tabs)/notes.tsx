@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ChevronDown, ChevronUp } from "lucide-react-native";
 import { useAllNotes, useNotesForDate, useCreateNote, useDeleteNote } from "../../hooks/useNotes";
 import { useMood } from "../../hooks/useMood";
 import { MoodCard } from "../../components/mood/MoodCard";
@@ -25,6 +26,48 @@ function getTodayLocal(): string {
 function formatSectionDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
   return d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
+function addDaysLocal(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T12:00:00");
+  d.setDate(d.getDate() + days);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function relativeDayLabel(dateStr: string): string {
+  const today = getTodayLocal();
+  if (dateStr === today) return "Hoy";
+  if (dateStr === addDaysLocal(today, -1)) return "Ayer";
+  const d = new Date(dateStr + "T12:00:00");
+  const weekday = d.toLocaleDateString("es-ES", { weekday: "long" });
+  const day = d.getDate();
+  const month = d.toLocaleDateString("es-ES", { month: "short" });
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${day} ${month}`;
+}
+
+function dominantMood(notes: DailyNote[]): MoodValue | null {
+  const counts = new Map<MoodValue, number>();
+  for (const n of notes) {
+    if (n.mood) counts.set(n.mood, (counts.get(n.mood) ?? 0) + 1);
+  }
+  let best: MoodValue | null = null;
+  let bestCount = 0;
+  for (const [m, c] of counts) {
+    if (c > bestCount) { best = m; bestCount = c; }
+  }
+  return best;
+}
+
+type PeriodFilter = "today" | "week" | "all";
+
+function filterNotesByPeriod(notes: DailyNote[], period: PeriodFilter): DailyNote[] {
+  if (period === "all") return notes;
+  const today = getTodayLocal();
+  if (period === "today") return notes.filter((n) => n.date === today);
+  // week = last 7 days including today
+  const cutoff = addDaysLocal(today, -6);
+  return notes.filter((n) => n.date >= cutoff);
 }
 
 function formatNoteTime(isoString: string): string {
@@ -92,30 +135,40 @@ function MiniMoodPicker({
 
 function NoteRow({ note, onDelete }: { note: DailyNote; onDelete: () => void }) {
   const moodOpt = note.mood ? MOOD_OPTIONS.find((o) => o.value === note.mood) : null;
+  const stripeColor = moodOpt?.color ?? colors.gray200;
   return (
     <Pressable
       onLongPress={onDelete}
       style={({ pressed }) => ({
         marginHorizontal: spacing.lg,
         marginTop: spacing.sm,
-        padding: spacing.md,
-        backgroundColor: moodOpt ? moodOpt.bg : colors.white,
+        flexDirection: "row",
+        backgroundColor: colors.white,
         borderRadius: radii.lg,
         borderWidth: 1,
-        borderColor: moodOpt ? `${moodOpt.color}30` : colors.cardBorder,
+        borderColor: colors.cardBorder,
+        overflow: "hidden",
         opacity: pressed ? 0.85 : 1,
         ...shadows.subtle,
       })}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6, gap: 6 }}>
-        <Text style={{ fontSize: 11, color: colors.textMuted }}>{formatNoteTime(note.created_at)}</Text>
-        {moodOpt && (
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-            <Text style={{ fontSize: 14 }}>{moodOpt.emoji}</Text>
-          </View>
-        )}
+      {/* Franja lateral de color según mood */}
+      <View style={{ width: 4, backgroundColor: stripeColor }} />
+
+      <View style={{ flex: 1, padding: spacing.md }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4, gap: 8 }}>
+          <Text style={{ fontSize: 11, color: colors.textMuted, fontWeight: "600" }}>
+            {formatNoteTime(note.created_at)}
+          </Text>
+          {moodOpt && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radii.full, backgroundColor: moodOpt.bg }}>
+              <Text style={{ fontSize: 12 }}>{moodOpt.emoji}</Text>
+              <Text style={{ fontSize: 10, color: moodOpt.color, fontWeight: "600" }}>{moodOpt.label}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={{ fontSize: 14, color: colors.textPrimary, lineHeight: 20 }}>{note.content}</Text>
       </View>
-      <Text style={{ fontSize: 14, color: colors.textPrimary, lineHeight: 20 }}>{note.content}</Text>
     </Pressable>
   );
 }
@@ -130,6 +183,16 @@ export default function NotesScreen() {
   const deleteNoteM = useDeleteNote(today);
 
   const [text, setText] = useState("");
+  const [period, setPeriod] = useState<PeriodFilter>("week");
+  const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
+
+  function toggleCollapse(date: string) {
+    setCollapsedDates((prev) => {
+      const next = new Set(prev);
+      if (next.has(date)) next.delete(date); else next.add(date);
+      return next;
+    });
+  }
 
   function handleMoodChange(m: MoodValue) {
     if (m === mood) return; // evitar crear nota duplicada si tap el mismo mood
@@ -158,7 +221,20 @@ export default function NotesScreen() {
     void refetchToday();
   }
 
-  const sections = groupByDate(allNotes);
+  const { sections, sectionStats } = useMemo(() => {
+    const filtered = filterNotesByPeriod(allNotes, period);
+    const grouped = groupByDate(filtered);
+    const stats = new Map<string, { count: number; mood: MoodValue | null }>();
+    for (const s of grouped) {
+      stats.set(s.title, { count: s.data.length, mood: dominantMood(s.data) });
+    }
+    // Si la sección está colapsada, ocultar items pero mantener el header
+    const displaySections = grouped.map((s) => ({
+      ...s,
+      data: collapsedDates.has(s.title) ? [] : s.data,
+    }));
+    return { sections: displaySections, sectionStats: stats };
+  }, [allNotes, period, collapsedDates]);
 
   if (isLoading) {
     return (
@@ -243,11 +319,52 @@ export default function NotesScreen() {
         />
       </View>
 
+      {/* Filter chips: Hoy / Últimos 7 días / Todas */}
+      <View style={{
+        flexDirection: "row",
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.sm,
+        marginBottom: spacing.sm,
+        backgroundColor: colors.gray100,
+        borderRadius: radii.lg,
+        padding: 3,
+      }}>
+        {([
+          { key: "today", label: "Hoy" },
+          { key: "week", label: "7 días" },
+          { key: "all", label: "Todas" },
+        ] as const).map((tab) => {
+          const active = period === tab.key;
+          return (
+            <Pressable
+              key={tab.key}
+              onPress={() => setPeriod(tab.key)}
+              style={{
+                flex: 1,
+                paddingVertical: 8,
+                borderRadius: radii.md,
+                backgroundColor: active ? colors.white : "transparent",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{
+                fontSize: 13,
+                fontWeight: active ? "600" : "400",
+                color: active ? colors.textPrimary : colors.textMuted,
+              }}>
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
       <SectionList
         style={{ flex: 1 }}
         sections={sections}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="handled"
+        stickySectionHeadersEnabled={true}
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
@@ -260,19 +377,44 @@ export default function NotesScreen() {
               <View style={{ alignItems: "center", paddingTop: 32, paddingHorizontal: 32 }}>
                 <Text style={{ fontSize: 32, marginBottom: 8 }}>📝</Text>
                 <Text style={{ fontSize: 15, color: colors.textMuted, textAlign: "center" }}>
-                  Tus notas aparecerán aquí
+                  {period === "today" ? "No hay notas hoy" : period === "week" ? "No hay notas en los últimos 7 días" : "Tus notas aparecerán aquí"}
                 </Text>
               </View>
             )}
           </View>
         }
-        renderSectionHeader={({ section }) => (
-          <View style={{ backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.cardBorder, marginTop: spacing.sm }}>
-            <Text style={{ fontSize: 12, fontWeight: "600", color: colors.primary, textTransform: "capitalize" }}>
-              {formatSectionDate(section.title)}
-            </Text>
-          </View>
-        )}
+        renderSectionHeader={({ section }) => {
+          const stats = sectionStats.get(section.title);
+          const isCollapsed = collapsedDates.has(section.title);
+          const moodOpt = stats?.mood ? MOOD_OPTIONS.find((o) => o.value === stats.mood) : null;
+          return (
+            <Pressable
+              onPress={() => toggleCollapse(section.title)}
+              style={({ pressed }) => ({
+                backgroundColor: pressed ? colors.gray50 : colors.surface,
+                paddingHorizontal: spacing.lg,
+                paddingVertical: spacing.sm,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.cardBorder,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+              })}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "700", color: colors.textPrimary, flex: 1 }}>
+                {relativeDayLabel(section.title)}
+              </Text>
+              {moodOpt && <Text style={{ fontSize: 14 }}>{moodOpt.emoji}</Text>}
+              <Text style={{ fontSize: 11, color: colors.textMuted }}>
+                {stats?.count ?? 0} {stats?.count === 1 ? "nota" : "notas"}
+              </Text>
+              {isCollapsed
+                ? <ChevronDown size={16} color={colors.textMuted} strokeWidth={2} />
+                : <ChevronUp size={16} color={colors.textMuted} strokeWidth={2} />
+              }
+            </Pressable>
+          );
+        }}
         renderItem={({ item }) => (
           <NoteRow note={item} onDelete={() => handleDelete(item)} />
         )}
