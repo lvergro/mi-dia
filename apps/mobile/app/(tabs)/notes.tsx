@@ -167,6 +167,72 @@ export default function NotesScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface }}>
+      {/* Input card FIJO arriba — fuera del SectionList → no afectado por auto-scroll del keyboard */}
+      <View style={{
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.lg,
+        marginBottom: spacing.sm,
+        backgroundColor: colors.white,
+        borderRadius: radii.lg,
+        borderWidth: 1,
+        borderColor: colors.cardBorder,
+        padding: spacing.md,
+        ...shadows.card,
+      }}>
+        <View style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: spacing.md,
+        }}>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
+            Nueva nota
+          </Text>
+          <Pressable
+            onPress={handleAdd}
+            disabled={createNote.isPending || !text.trim()}
+            style={({ pressed }) => ({
+              backgroundColor: text.trim() ? colors.primary : colors.gray200,
+              borderRadius: radii.md,
+              paddingHorizontal: spacing.lg,
+              paddingVertical: 10,
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <Text style={{
+              color: text.trim() ? colors.white : colors.textMuted,
+              fontWeight: "700",
+              fontSize: 14,
+            }}>
+              {createNote.isPending ? "Guardando…" : "Guardar"}
+            </Text>
+          </Pressable>
+        </View>
+
+        <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
+
+        <TextInput
+          value={text}
+          onChangeText={setText}
+          placeholder="¿Qué tienes en mente hoy?"
+          placeholderTextColor={colors.textMuted}
+          multiline
+          style={{
+            borderWidth: 1,
+            borderColor: text ? colors.primary : colors.cardBorder,
+            borderRadius: radii.md,
+            paddingHorizontal: spacing.md,
+            paddingVertical: 10,
+            fontSize: 14,
+            color: colors.textPrimary,
+            minHeight: 80,
+            maxHeight: 120,
+            textAlignVertical: "top",
+            backgroundColor: colors.white,
+          }}
+        />
+      </View>
+
       <SectionList
         style={{ flex: 1 }}
         sections={sections}
@@ -179,72 +245,6 @@ export default function NotesScreen() {
         ListHeaderComponent={
           <View style={{ backgroundColor: colors.surface }}>
             <MoodCard mood={mood} onMoodChange={setMood} isSaving={isMoodSaving} />
-
-            {/* Input de nueva nota */}
-            <View style={{
-              marginHorizontal: spacing.lg,
-              marginBottom: spacing.lg,
-              backgroundColor: colors.white,
-              borderRadius: radii.lg,
-              borderWidth: 1,
-              borderColor: colors.cardBorder,
-              padding: spacing.md,
-              ...shadows.card,
-            }}>
-              {/* Header del card: título + botón Guardar (siempre visible arriba) */}
-              <View style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: spacing.md,
-              }}>
-                <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
-                  Nueva nota
-                </Text>
-                <Pressable
-                  onPress={handleAdd}
-                  disabled={createNote.isPending || !text.trim()}
-                  style={({ pressed }) => ({
-                    backgroundColor: text.trim() ? colors.primary : colors.gray200,
-                    borderRadius: radii.md,
-                    paddingHorizontal: spacing.lg,
-                    paddingVertical: 10,
-                    opacity: pressed ? 0.8 : 1,
-                  })}
-                >
-                  <Text style={{
-                    color: text.trim() ? colors.white : colors.textMuted,
-                    fontWeight: "700",
-                    fontSize: 14,
-                  }}>
-                    {createNote.isPending ? "Guardando…" : "Guardar"}
-                  </Text>
-                </Pressable>
-              </View>
-
-              <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
-
-              <TextInput
-                value={text}
-                onChangeText={setText}
-                placeholder="¿Qué tienes en mente hoy?"
-                placeholderTextColor={colors.textMuted}
-                multiline
-                style={{
-                  borderWidth: 1,
-                  borderColor: text ? colors.primary : colors.cardBorder,
-                  borderRadius: radii.md,
-                  paddingHorizontal: spacing.md,
-                  paddingVertical: 10,
-                  fontSize: 14,
-                  color: colors.textPrimary,
-                  minHeight: 80,
-                  maxHeight: 120,
-                  textAlignVertical: "top",
-                  backgroundColor: colors.white,
-                }}
-              />
-            </View>
 
             {sections.length === 0 && (
               <View style={{ alignItems: "center", paddingTop: 32, paddingHorizontal: 32 }}>
