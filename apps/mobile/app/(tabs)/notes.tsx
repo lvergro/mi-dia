@@ -10,8 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ChevronDown, ChevronUp } from "lucide-react-native";
-import { useAllNotes, useNotesForDate, useCreateNote, useDeleteNote } from "../../hooks/useNotes";
+import { ChevronDown, ChevronUp, Pencil } from "lucide-react-native";
+import { useAllNotes, useNotesForDate, useCreateNote, useDeleteNote, useUpdateNote } from "../../hooks/useNotes";
 import { useMood } from "../../hooks/useMood";
 import { MoodCard } from "../../components/mood/MoodCard";
 import { colors, radii, shadows, spacing } from "../../theme";
@@ -21,11 +21,6 @@ function getTodayLocal(): string {
   const d = new Date();
   const pad = (n: number) => n.toString().padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-function formatSectionDate(dateStr: string): string {
-  const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
 function addDaysLocal(dateStr: string, days: number): string {
@@ -134,42 +129,132 @@ function MiniMoodPicker({
 }
 
 function NoteRow({ note, onDelete }: { note: DailyNote; onDelete: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(note.content);
+  const updateNote = useUpdateNote(note.date);
   const moodOpt = note.mood ? MOOD_OPTIONS.find((o) => o.value === note.mood) : null;
   const stripeColor = moodOpt?.color ?? colors.gray200;
+
+  function startEdit() {
+    setEditText(note.content);
+    setEditing(true);
+  }
+
+  function cancelEdit() {
+    setEditing(false);
+    setEditText(note.content);
+  }
+
+  function saveEdit() {
+    const trimmed = editText.trim();
+    if (!trimmed || trimmed === note.content) {
+      setEditing(false);
+      return;
+    }
+    updateNote.mutate(
+      { id: note.id, content: trimmed },
+      {
+        onSuccess: () => setEditing(false),
+        onError: () => Alert.alert("Error", "No se pudo guardar la nota."),
+      },
+    );
+  }
+
   return (
-    <Pressable
-      onLongPress={onDelete}
-      style={({ pressed }) => ({
+    <View
+      style={{
         marginHorizontal: 0,
         marginTop: spacing.sm,
         flexDirection: "row",
         backgroundColor: colors.white,
         borderRadius: radii.lg,
         borderWidth: 1,
-        borderColor: colors.cardBorder,
+        borderColor: editing ? colors.primary : colors.cardBorder,
         overflow: "hidden",
-        opacity: pressed ? 0.85 : 1,
         ...shadows.subtle,
-      })}
+      }}
     >
-      {/* Franja lateral de color según mood */}
       <View style={{ width: 4, backgroundColor: stripeColor }} />
 
       <View style={{ flex: 1, padding: spacing.md }}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4, gap: 8 }}>
-          <Text style={{ fontSize: 11, color: colors.textMuted, fontWeight: "600" }}>
-            {formatNoteTime(note.created_at)}
-          </Text>
-          {moodOpt && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radii.full, backgroundColor: moodOpt.bg }}>
-              <Text style={{ fontSize: 12 }}>{moodOpt.emoji}</Text>
-              <Text style={{ fontSize: 10, color: moodOpt.color, fontWeight: "600" }}>{moodOpt.label}</Text>
+        {editing ? (
+          <>
+            <TextInput
+              value={editText}
+              onChangeText={setEditText}
+              multiline
+              autoFocus
+              style={{
+                fontSize: 14,
+                color: colors.textPrimary,
+                lineHeight: 20,
+                minHeight: 60,
+                maxHeight: 120,
+                textAlignVertical: "top",
+                borderWidth: 1,
+                borderColor: colors.primary,
+                borderRadius: radii.sm,
+                paddingHorizontal: spacing.sm,
+                paddingVertical: 6,
+                marginBottom: spacing.sm,
+              }}
+            />
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 8 }}>
+              <TouchableOpacity
+                onPress={cancelEdit}
+                activeOpacity={0.7}
+                style={{
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: 6,
+                  borderRadius: radii.md,
+                  borderWidth: 1,
+                  borderColor: colors.cardBorder,
+                }}
+              >
+                <Text style={{ fontSize: 13, color: colors.textMuted, fontWeight: "600" }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={saveEdit}
+                disabled={updateNote.isPending || !editText.trim() || editText.trim() === note.content}
+                activeOpacity={0.7}
+                style={{
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: 6,
+                  borderRadius: radii.md,
+                  backgroundColor: colors.primary,
+                  opacity: (updateNote.isPending || !editText.trim() || editText.trim() === note.content) ? 0.6 : 1,
+                }}
+              >
+                <Text style={{ fontSize: 13, color: colors.white, fontWeight: "600" }}>
+                  {updateNote.isPending ? "Guardando…" : "Guardar"}
+                </Text>
+              </TouchableOpacity>
             </View>
-          )}
-        </View>
-        <Text style={{ fontSize: 14, color: colors.textPrimary, lineHeight: 20 }}>{note.content}</Text>
+          </>
+        ) : (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4, gap: 8 }}>
+              <Text style={{ fontSize: 11, color: colors.textMuted, fontWeight: "600" }}>
+                {formatNoteTime(note.created_at)}
+              </Text>
+              {moodOpt && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radii.full, backgroundColor: moodOpt.bg }}>
+                  <Text style={{ fontSize: 12 }}>{moodOpt.emoji}</Text>
+                  <Text style={{ fontSize: 10, color: moodOpt.color, fontWeight: "600" }}>{moodOpt.label}</Text>
+                </View>
+              )}
+              <View style={{ flex: 1 }} />
+              <TouchableOpacity onPress={startEdit} hitSlop={8} activeOpacity={0.7}>
+                <Pencil size={14} color={colors.textMuted} strokeWidth={1.8} />
+              </TouchableOpacity>
+            </View>
+            <Pressable onLongPress={onDelete}>
+              <Text style={{ fontSize: 14, color: colors.textPrimary, lineHeight: 20 }}>{note.content}</Text>
+            </Pressable>
+          </>
+        )}
       </View>
-    </Pressable>
+    </View>
   );
 }
 
