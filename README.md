@@ -1,16 +1,15 @@
 # Trazadía
 
-Diario de salud personal. Registra tu estado de ánimo, medicamentos, procedimientos y notas diarias. Lleva un historial y cuida tu bienestar día a día.
+Trazadía es una aplicación móvil de bienestar integral diseñada para centralizar, simplificar y registrar tus rutinas diarias de salud. Combina la gestión precisa de medicamentos y procedimientos médicos con un sistema intuitivo de rastreo de estado de ánimo y bitácora personal.
 
 Disponible en Android via Expo.
-
 ---
 
 ## Stack
 
 | Capa | Tecnología |
 |------|-----------|
-| Mobile | Expo SDK 54 · Expo Router v4 · React Native |
+| Mobile | Expo SDK 54 · Expo Router v6 · React Native 0.81 |
 | Estilos | NativeWind (Tailwind para React Native) |
 | Backend | Supabase (PostgreSQL 15 + Auth + RLS) |
 | Estado servidor | TanStack Query |
