@@ -9,7 +9,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Send } from "lucide-react-native";
 import { useAllNotes, useNotesForDate, useCreateNote, useDeleteNote } from "../../hooks/useNotes";
 import { useMood } from "../../hooks/useMood";
 import { MoodCard } from "../../components/mood/MoodCard";
@@ -192,45 +191,59 @@ export default function NotesScreen() {
               padding: spacing.md,
               ...shadows.card,
             }}>
-              <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
-              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: spacing.sm }}>
-                <TextInput
-                  value={text}
-                  onChangeText={setText}
-                  placeholder="¿Qué tienes en mente hoy?"
-                  placeholderTextColor={colors.textMuted}
-                  multiline
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: text ? colors.primary : colors.cardBorder,
-                    borderRadius: radii.md,
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: 10,
-                    fontSize: 14,
-                    color: colors.textPrimary,
-                    minHeight: 72,
-                    maxHeight: 140,
-                    textAlignVertical: "top",
-                    backgroundColor: colors.white,
-                  }}
-                />
+              {/* Header del card: título + botón Guardar (siempre visible arriba) */}
+              <View style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: spacing.md,
+              }}>
+                <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
+                  Nueva nota
+                </Text>
                 <Pressable
                   onPress={handleAdd}
                   disabled={createNote.isPending || !text.trim()}
                   style={({ pressed }) => ({
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
                     backgroundColor: text.trim() ? colors.primary : colors.gray200,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: pressed ? 0.75 : 1,
+                    borderRadius: radii.md,
+                    paddingHorizontal: spacing.lg,
+                    paddingVertical: 10,
+                    opacity: pressed ? 0.8 : 1,
                   })}
                 >
-                  <Send size={18} color={text.trim() ? colors.white : colors.textMuted} strokeWidth={2} />
+                  <Text style={{
+                    color: text.trim() ? colors.white : colors.textMuted,
+                    fontWeight: "700",
+                    fontSize: 14,
+                  }}>
+                    {createNote.isPending ? "Guardando…" : "Guardar"}
+                  </Text>
                 </Pressable>
               </View>
+
+              <MiniMoodPicker selected={noteMood} onSelect={setNoteMood} />
+
+              <TextInput
+                value={text}
+                onChangeText={setText}
+                placeholder="¿Qué tienes en mente hoy?"
+                placeholderTextColor={colors.textMuted}
+                multiline
+                style={{
+                  borderWidth: 1,
+                  borderColor: text ? colors.primary : colors.cardBorder,
+                  borderRadius: radii.md,
+                  paddingHorizontal: spacing.md,
+                  paddingVertical: 10,
+                  fontSize: 14,
+                  color: colors.textPrimary,
+                  minHeight: 80,
+                  maxHeight: 120,
+                  textAlignVertical: "top",
+                  backgroundColor: colors.white,
+                }}
+              />
             </View>
 
             {sections.length === 0 && (
