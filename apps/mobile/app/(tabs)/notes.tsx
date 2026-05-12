@@ -244,8 +244,13 @@ function NoteRow({ note, onDelete }: { note: DailyNote; onDelete: () => void }) 
                 </View>
               )}
               <View style={{ flex: 1 }} />
-              <TouchableOpacity onPress={startEdit} hitSlop={8} activeOpacity={0.7}>
-                <Pencil size={14} color={colors.textMuted} strokeWidth={1.8} />
+              <TouchableOpacity
+                onPress={startEdit}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={{ padding: 4 }}
+              >
+                <Pencil size={16} color={colors.primary} strokeWidth={1.8} />
               </TouchableOpacity>
             </View>
             <Pressable onLongPress={onDelete}>
