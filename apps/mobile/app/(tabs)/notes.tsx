@@ -140,7 +140,7 @@ function NoteRow({ note, onDelete }: { note: DailyNote; onDelete: () => void }) 
     <Pressable
       onLongPress={onDelete}
       style={({ pressed }) => ({
-        marginHorizontal: spacing.lg,
+        marginHorizontal: 0,
         marginTop: spacing.sm,
         flexDirection: "row",
         backgroundColor: colors.white,
@@ -369,7 +369,7 @@ export default function NotesScreen() {
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={handleRefresh} tintColor={colors.primary} />
         }
-        contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
+        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 20, flexGrow: 1 }}
         ListHeaderComponent={
           <View style={{ backgroundColor: colors.surface }}>
             <MoodCard mood={mood} onMoodChange={handleMoodChange} isSaving={isMoodSaving} />
@@ -389,31 +389,41 @@ export default function NotesScreen() {
           const isCollapsed = collapsedDates.has(section.title);
           const moodOpt = stats?.mood ? MOOD_OPTIONS.find((o) => o.value === stats.mood) : null;
           return (
-            <Pressable
-              onPress={() => toggleCollapse(section.title)}
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? colors.gray50 : colors.surface,
-                paddingHorizontal: spacing.xl,
-                paddingVertical: spacing.md,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.cardBorder,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-              })}
-            >
-              <Text style={{ fontSize: 13, fontWeight: "700", color: colors.textPrimary, flex: 1 }}>
-                {relativeDayLabel(section.title)}
-              </Text>
-              {moodOpt && <Text style={{ fontSize: 14 }}>{moodOpt.emoji}</Text>}
-              <Text style={{ fontSize: 11, color: colors.textMuted }}>
-                {stats?.count ?? 0} {stats?.count === 1 ? "nota" : "notas"}
-              </Text>
-              {isCollapsed
-                ? <ChevronDown size={16} color={colors.textMuted} strokeWidth={2} />
-                : <ChevronUp size={16} color={colors.textMuted} strokeWidth={2} />
-              }
-            </Pressable>
+            <View style={{ backgroundColor: colors.surface, paddingVertical: 10 }}>
+              <TouchableOpacity
+                onPress={() => toggleCollapse(section.title)}
+                activeOpacity={0.7}
+                style={{
+                  backgroundColor: colors.white,
+                  paddingHorizontal: 16,
+                  paddingVertical: 16,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: colors.cardBorder,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  ...shadows.subtle,
+                }}
+              >
+                <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: colors.textPrimary }}>
+                    {relativeDayLabel(section.title)}
+                  </Text>
+                  {moodOpt && <Text style={{ fontSize: 16 }}>{moodOpt.emoji}</Text>}
+                </View>
+                
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Text style={{ fontSize: 12, color: colors.textMuted }}>
+                    {stats?.count ?? 0} {stats?.count === 1 ? "nota" : "notas"}
+                  </Text>
+                  {isCollapsed
+                    ? <ChevronDown size={18} color={colors.textMuted} />
+                    : <ChevronUp size={18} color={colors.textMuted} />
+                  }
+                </View>
+              </TouchableOpacity>
+            </View>
           );
         }}
         renderItem={({ item }) => (
