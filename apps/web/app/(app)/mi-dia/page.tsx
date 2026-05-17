@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MiDiaView } from "@/components/checklist/MiDiaView";
 import { buildChecklistWithLogs, filterItemsForDate } from "@mi-dia/core";
@@ -10,6 +11,7 @@ function todayLocal(): string {
 export default async function MiDiaPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
   const today = todayLocal();
 
   const [itemsRes, logsRes] = await Promise.all([

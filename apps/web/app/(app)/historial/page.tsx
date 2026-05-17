@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HistorialView } from "@/components/history/HistorialView";
 import { buildHistory } from "@mi-dia/core";
@@ -10,6 +11,7 @@ function todayLocal() {
 export default async function HistorialPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const today = todayLocal();
   const sevenDaysAgo = new Date();

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ItemList } from "@/components/items/ItemList";
 import type { Item } from "@mi-dia/types";
@@ -5,6 +6,7 @@ import type { Item } from "@mi-dia/types";
 export default async function MedicamentosPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
   const { data: items, error } = await supabase
     .from("items")
