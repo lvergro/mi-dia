@@ -1,3 +1,4 @@
+// Deprecated: use lib/db/items.ts instead
 import type { Medication, MedicationInsert, MedicationUpdate } from "@mi-dia/types";
 import { createClient } from "@/lib/supabase/client";
 

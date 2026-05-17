@@ -1,62 +1,86 @@
 "use client";
 import { useState } from "react";
-import type { DailyItemStatus } from "@mi-dia/types";
+import type { ItemWithStatus } from "@mi-dia/core";
 import { cn } from "@/lib/utils";
-import { updateDailyItemStatus } from "@/lib/db/daily-items";
-import { NotSureWarning } from "./NotSureWarning";
-import { Check, X, HelpCircle } from "lucide-react";
+import { upsertLog, deleteLog } from "@/lib/db/logs";
+import { Check, X, RotateCcw } from "lucide-react";
 
-interface StatusControlProps {
-  itemId: string;
-  initialStatus: DailyItemStatus;
-}
-
-const buttons: { status: DailyItemStatus; label: string; icon: React.ElementType; active: string; idle: string }[] = [
-  { status: "done", label: "Hecho", icon: Check, active: "bg-done text-white", idle: "text-done hover:bg-done-light" },
-  { status: "skipped", label: "Saltar", icon: X, active: "bg-skipped text-white", idle: "text-skipped hover:bg-pending" },
-  { status: "not_sure", label: "No recuerdo", icon: HelpCircle, active: "bg-not_sure text-white", idle: "text-not_sure hover:bg-warning-subtle" },
-];
-
-export function StatusControl({ itemId, initialStatus }: StatusControlProps) {
-  const [status, setStatus] = useState<DailyItemStatus>(initialStatus);
-  const [showWarning, setShowWarning] = useState(false);
+export function StatusControl({ item, date }: { item: ItemWithStatus; date: string }) {
+  const [status, setStatus] = useState(item.status);
+  const [logId, setLogId] = useState<string | null>(item.log?.id ?? null);
   const [saving, setSaving] = useState(false);
 
-  async function handleClick(newStatus: DailyItemStatus) {
+  async function handleDone() {
     if (saving) return;
     setSaving(true);
     try {
-      const completedAt = newStatus === "done" ? new Date().toISOString() : undefined;
-      await updateDailyItemStatus(itemId, newStatus, completedAt);
-      setStatus(newStatus);
-      setShowWarning(newStatus === "not_sure");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSaving(false);
-    }
+      if (status === "done") {
+        if (logId) await deleteLog(logId);
+        setStatus("pending");
+        setLogId(null);
+      } else {
+        const log = await upsertLog({ item_id: item.id, date, status: "done" });
+        setStatus("done");
+        setLogId(log.id);
+      }
+    } catch (e) { console.error(e); }
+    finally { setSaving(false); }
+  }
+
+  async function handleOmitted() {
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (status === "omitted") {
+        if (logId) await deleteLog(logId);
+        setStatus("pending");
+        setLogId(null);
+      } else {
+        const log = await upsertLog({ item_id: item.id, date, status: "omitted" });
+        setStatus("omitted");
+        setLogId(log.id);
+      }
+    } catch (e) { console.error(e); }
+    finally { setSaving(false); }
+  }
+
+  if (status !== "pending") {
+    return (
+      <button
+        onClick={status === "done" ? handleDone : handleOmitted}
+        disabled={saving}
+        className="flex items-center gap-1.5 text-xs text-muted hover:text-gray-900 transition-colors disabled:opacity-50"
+      >
+        <RotateCcw className="size-3" />
+        Revertir
+      </button>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-1">
-        {buttons.map(({ status: s, label, icon: Icon, active, idle }) => (
-          <button
-            key={s}
-            onClick={() => handleClick(s)}
-            disabled={saving}
-            title={label}
-            className={cn(
-              "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
-              status === s ? active : idle
-            )}
-          >
-            <Icon className="size-3.5" />
-            <span className="hidden sm:inline">{label}</span>
-          </button>
-        ))}
-      </div>
-      {showWarning && <NotSureWarning />}
+    <div className="flex items-center gap-1">
+      <button
+        onClick={handleDone}
+        disabled={saving}
+        className={cn(
+          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
+          "text-done hover:bg-done-light"
+        )}
+      >
+        <Check className="size-3.5" />
+        <span className="hidden sm:inline">Hecho</span>
+      </button>
+      <button
+        onClick={handleOmitted}
+        disabled={saving}
+        className={cn(
+          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50",
+          "text-skipped hover:bg-pending"
+        )}
+      >
+        <X className="size-3.5" />
+        <span className="hidden sm:inline">Saltado</span>
+      </button>
     </div>
   );
 }

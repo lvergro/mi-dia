@@ -1,15 +1,16 @@
-import type { DailyItem } from "@mi-dia/types";
+import type { ItemWithStatus, ItemBlock } from "@mi-dia/core";
 import { ChecklistItem } from "./ChecklistItem";
 
-const blockLabels = { morning: "Mañana", afternoon: "Tarde", night: "Noche" };
-const blockEmoji = { morning: "☀️", afternoon: "🌤", night: "🌙" };
+const blockLabels: Record<ItemBlock, string> = { mañana: "Mañana", tarde: "Tarde", noche: "Noche" };
+const blockEmoji: Record<ItemBlock, string> = { mañana: "☀️", tarde: "🌤", noche: "🌙" };
 
 interface TimeBlockProps {
-  block: "morning" | "afternoon" | "night";
-  items: DailyItem[];
+  block: ItemBlock;
+  items: ItemWithStatus[];
+  date: string;
 }
 
-export function TimeBlock({ block, items }: TimeBlockProps) {
+export function TimeBlock({ block, items, date }: TimeBlockProps) {
   if (items.length === 0) return null;
   return (
     <section className="flex flex-col gap-3">
@@ -19,7 +20,7 @@ export function TimeBlock({ block, items }: TimeBlockProps) {
         <span className="ml-auto text-xs font-normal normal-case">{items.length} ítem{items.length > 1 ? "s" : ""}</span>
       </h2>
       <div className="flex flex-col gap-2">
-        {items.map(item => <ChecklistItem key={item.id} item={item} />)}
+        {items.map(item => <ChecklistItem key={item.id} item={item} date={date} />)}
       </div>
     </section>
   );

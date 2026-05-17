@@ -1,36 +1,35 @@
 import { createClient } from "@/lib/supabase/server";
 import { HistorialView } from "@/components/history/HistorialView";
-import type { DailyItem } from "@mi-dia/types";
+import { buildHistory } from "@mi-dia/core";
+import type { Item, Log } from "@mi-dia/types";
 
-function lastNDays(n: number): string[] {
-  return Array.from({ length: n }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    return d.toISOString().slice(0, 10);
-  });
+function todayLocal() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 export default async function HistorialPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const days = lastNDays(7);
-  const fromDate = days[days.length - 1];
-  const toDate = days[0];
+  const today = todayLocal();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+  const fromDate = sevenDaysAgo.toISOString().slice(0, 10);
 
-  const { data: items, error } = await supabase
-    .from("daily_items")
-    .select("*")
-    .eq("user_id", user!.id)
-    .gte("date", fromDate)
-    .lte("date", toDate);
+  const [itemsRes, logsRes] = await Promise.all([
+    supabase.from("items").select("*").eq("user_id", user!.id).is("deleted_at", null),
+    supabase.from("logs").select("*").eq("user_id", user!.id).gte("date", fromDate).lte("date", today),
+  ]);
 
-  if (error) throw error;
+  if (itemsRes.error) throw itemsRes.error;
+  if (logsRes.error) throw logsRes.error;
 
-  const itemsByDay = days.map(date => ({
-    date,
-    items: (items ?? []).filter(i => i.date === date) as DailyItem[],
-  }));
+  const history = buildHistory(
+    (itemsRes.data ?? []) as Item[],
+    (logsRes.data ?? []) as Log[],
+    7,
+    today
+  );
 
   return (
     <div className="max-w-2xl">
@@ -39,7 +38,7 @@ export default async function HistorialPage() {
         <p className="text-sm text-muted mt-0.5">Últimos 7 días</p>
       </div>
       <div className="rounded-2xl border border-card-border bg-white p-6">
-        <HistorialView days={itemsByDay} />
+        <HistorialView history={history} />
       </div>
     </div>
   );
