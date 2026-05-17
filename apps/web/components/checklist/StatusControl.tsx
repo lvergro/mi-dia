@@ -19,7 +19,7 @@ export function StatusControl({ item, date }: { item: ItemWithStatus; date: stri
         setStatus("pending");
         setLogId(null);
       } else {
-        const log = await upsertLog({ item_id: item.id, date, status: "done" });
+        const log = await upsertLog({ user_id: item.user_id, item_id: item.id, date, status: "done" });
         setStatus("done");
         setLogId(log.id);
       }
@@ -36,7 +36,7 @@ export function StatusControl({ item, date }: { item: ItemWithStatus; date: stri
         setStatus("pending");
         setLogId(null);
       } else {
-        const log = await upsertLog({ item_id: item.id, date, status: "omitted" });
+        const log = await upsertLog({ user_id: item.user_id, item_id: item.id, date, status: "omitted" });
         setStatus("omitted");
         setLogId(log.id);
       }

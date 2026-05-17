@@ -22,7 +22,7 @@ export async function getLogsForRange(fromDate: string, toDate: string): Promise
   return data as Log[];
 }
 
-export async function upsertLog(payload: { item_id: string; date: string; status: "done" | "omitted"; note?: string | null }): Promise<Log> {
+export async function upsertLog(payload: { user_id: string; item_id: string; date: string; status: "done" | "omitted"; note?: string | null }): Promise<Log> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("logs")
