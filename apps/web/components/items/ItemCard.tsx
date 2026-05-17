@@ -44,33 +44,31 @@ export function ItemCard({ item, onUpdated, onDeleted }: {
   }
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-2xl border border-card-border bg-white p-5">
-      <div className="flex items-center gap-3">
-        <div className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-xl",
-          item.type === "medication" ? "bg-done-light" : "bg-orange-100"
-        )}>
-          {item.type === "medication"
-            ? <Pill className="size-4 text-done" />
-            : <Activity className="size-4 text-orange-600" />
-          }
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <span className="font-medium text-gray-900">{item.name}</span>
-          <span className="text-xs text-muted">
-            {item.specific_time.slice(0, 5)}
-            {item.dose && ` · ${item.dose}`}
-            {" · "}{recurrence}
-            {" · "}{blockLabels[getItemBlock(item.specific_time)]}
-          </span>
-        </div>
+    <div className="flex items-center gap-3 rounded-3xl border border-card-border bg-white p-4 shadow-subtle">
+      <div className={cn(
+        "flex size-10 shrink-0 items-center justify-center rounded-[12px]",
+        item.type === "medication" ? "bg-done-light" : "bg-orange-100"
+      )}>
+        {item.type === "medication"
+          ? <Pill className="size-[18px] text-done" strokeWidth={1.8} />
+          : <Activity className="size-[18px] text-orange-500" strokeWidth={1.8} />
+        }
       </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <button onClick={() => setEditing(true)} className="rounded-lg p-2 text-muted hover:text-primary hover:bg-primary-subtle transition-colors">
-          <Pencil className="size-4" />
+      <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+        <span className="truncate text-sm font-semibold text-[#1e293b]">{item.name}</span>
+        <span className="text-xs text-[#94a3b8]">
+          {item.specific_time.slice(0, 5)}
+          {item.dose ? ` · ${item.dose}` : ""}
+          {" · "}{recurrence}
+          {" · "}{blockLabels[getItemBlock(item.specific_time)]}
+        </span>
+      </div>
+      <div className="flex items-center gap-0.5 shrink-0">
+        <button onClick={() => setEditing(true)} className="rounded-xl p-2 text-[#94a3b8] hover:text-primary hover:bg-primary-subtle transition-colors">
+          <Pencil className="size-[15px]" strokeWidth={1.8} />
         </button>
-        <button onClick={handleDelete} disabled={deleting} className="rounded-lg p-2 text-muted hover:text-danger hover:bg-danger-subtle transition-colors disabled:opacity-50">
-          <Trash2 className="size-4" />
+        <button onClick={handleDelete} disabled={deleting} className="rounded-xl p-2 text-[#94a3b8] hover:text-danger hover:bg-danger-subtle transition-colors disabled:opacity-50">
+          <Trash2 className="size-[15px]" strokeWidth={1.8} />
         </button>
       </div>
     </div>

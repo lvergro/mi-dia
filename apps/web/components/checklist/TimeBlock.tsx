@@ -14,10 +14,10 @@ export function TimeBlock({ block, items, date }: TimeBlockProps) {
   if (items.length === 0) return null;
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-muted uppercase tracking-wide">
-        <span>{blockEmoji[block]}</span>
-        {blockLabels[block]}
-        <span className="ml-auto text-xs font-normal normal-case">{items.length} ítem{items.length > 1 ? "s" : ""}</span>
+      <h2 className="flex items-center gap-2 ml-1" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.7px" }}>
+        <span className="text-sm">{blockEmoji[block]}</span>
+        <span className="uppercase text-[#64748b]">{blockLabels[block]}</span>
+        <span className="ml-auto font-normal normal-case text-[#94a3b8]">{items.length} ítem{items.length > 1 ? "s" : ""}</span>
       </h2>
       <div className="flex flex-col gap-2">
         {items.map(item => <ChecklistItem key={item.id} item={item} date={date} />)}

@@ -20,6 +20,17 @@ const config: Config = {
         danger: "#ef4444",
         "danger-subtle": "#fef2f2",
         "card-border": "#e7eaf3",
+        "text-primary": "#1e293b",
+        "text-secondary": "#64748b",
+        "text-muted": "#94a3b8",
+      },
+      boxShadow: {
+        card: "0 2px 8px rgba(99,102,241,0.06)",
+        subtle: "0 1px 4px rgba(0,0,0,0.04)",
+      },
+      borderRadius: {
+        "2xl": "16px",
+        "3xl": "20px",
       },
     },
   },
