@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarCheck, Pill, BarChart2, LogOut } from "lucide-react";
+import { CalendarCheck, Pill, BarChart2, NotebookPen, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
@@ -9,6 +9,7 @@ const links = [
   { href: "/mi-dia", label: "Mi Día", icon: CalendarCheck },
   { href: "/medicamentos", label: "Rutina", icon: Pill },
   { href: "/historial", label: "Historial", icon: BarChart2 },
+  { href: "/notas", label: "Notas", icon: NotebookPen },
 ];
 
 export function Sidebar() {
