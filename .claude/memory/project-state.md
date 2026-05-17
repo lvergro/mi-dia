@@ -15,7 +15,7 @@ test: (none)
 (none)
 
 ## Recent Decisions (last 5)
-- 2026-05-04: MVP = solo mobile (Expo). Sin app web hasta validar uso real.
+- 2026-05-16: apps/web añadida al monorepo — Next.js 15 (App Router) en Vercel. Mismas 4 pantallas. Sin push ni offline en MVP web.
 - 2026-05-04: Docker Compose para Supabase local. pnpm + Turborepo para monorepo.
 - 2026-05-04: 4 pantallas MVP: Mi Día, Medicamentos, Historial, Login.
 - 2026-05-04: Notas sin clasificación en MVP (solo content + date).

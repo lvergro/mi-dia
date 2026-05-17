@@ -8,20 +8,27 @@ C4Container
   Person(user, "Usuario", "Paciente")
 
   System_Boundary(s, "Mi Día") {
-    Container(mobile, "Mi Día Mobile", "Expo SDK 54 / React Native", "App mobile Android (v1). Toda la UI, lógica offline, sync con Supabase.")
-    ContainerDb(db, "Postgres DB", "Supabase Postgres 15", "Tablas: users, items, logs, notification_logs. RLS habilitado.")
-    Container(auth, "Supabase Auth", "Supabase Auth (GoTrue)", "Gestión de sesiones email+password. JWT para RLS.")
-    Container(edge, "Push Scheduler", "Supabase Edge Functions (Deno)", "Job programado por item. Verifica pendientes y envía push via Expo Push API.")
-    Container(storage, "Local Storage", "AsyncStorage / SQLite (Expo)", "Caché offline de items y logs del día. Sincroniza al reconectar.")
+    Container(mobile, "Mi Día Mobile", "Expo SDK 54 / React Native", "App mobile Android. Toda la UI, lógica offline-first, sync con Supabase. Recibe push.")
+    Container(web, "Mi Día Web", "Next.js 15 / App Router — Vercel", "App web browser. Mismas 4 pantallas: Login, Mi Día, Medicamentos, Historial. Sin offline ni push en MVP.")
+    ContainerDb(db, "Postgres DB", "Supabase Postgres 15", "Tablas: users, routines, daily_items, daily_notes. RLS habilitado.")
+    Container(auth, "Supabase Auth", "Supabase Auth (GoTrue)", "Gestión de sesiones email+password. JWT para RLS. Compartido por mobile y web.")
+    Container(edge, "Push Scheduler", "Supabase Edge Functions (Deno)", "Job programado por item. Verifica pendientes y envía push via Expo Push API. Solo mobile.")
+    Container(storage, "Local Storage", "AsyncStorage / SQLite (Expo)", "Caché offline del día actual — exclusivo de mobile.")
+    Container(shared_pkgs, "Shared Packages", "TypeScript (pnpm monorepo)", "packages/core, packages/database, packages/types, packages/validators. Reutilizados por mobile y web.")
   }
 
   System_Ext(expo_push, "Expo Push Service", "Entrega push a FCM/APNs")
 
   Rel(user, mobile, "Usa", "Táctil")
+  Rel(user, web, "Usa", "Browser / HTTPS")
   Rel(mobile, auth, "Login / Registro", "HTTPS / Supabase SDK")
   Rel(mobile, db, "CRUD items y logs", "HTTPS / Supabase SDK (RLS)")
   Rel(mobile, storage, "Lee/escribe offline", "Local")
+  Rel(mobile, shared_pkgs, "Lógica de negocio y queries", "Import")
   Rel(storage, db, "Sync al reconectar", "HTTPS / Supabase SDK")
+  Rel(web, auth, "Login / Registro", "HTTPS / Supabase SDK")
+  Rel(web, db, "CRUD items y logs", "HTTPS / Supabase SDK (RLS)")
+  Rel(web, shared_pkgs, "Lógica de negocio y queries", "Import")
   Rel(edge, db, "Lee items pendientes del día", "Postgres interno")
   Rel(edge, expo_push, "Envía tokens + mensajes push", "HTTPS")
   Rel(expo_push, user, "Notificación push", "FCM (Android)")
@@ -31,16 +38,20 @@ C4Container
 
 | Container | Tech | Propósito | Habla con |
 |-----------|------|-----------|-----------|
-| Mi Día Mobile | Expo SDK 54 / React Native | UI completa, offline-first, sync — **Android únicamente (v1)** | Supabase Auth, Postgres DB, Local Storage |
-| Postgres DB | Supabase Postgres 15 | Persistencia de users, items, logs | — |
+| Mi Día Mobile | Expo SDK 54 / React Native | UI Android, offline-first, push — **Android únicamente** | Supabase Auth, Postgres DB, Local Storage, Shared Packages |
+| Mi Día Web | Next.js 15 / App Router (Vercel) | UI web browser — Login, Mi Día, Medicamentos, Historial | Supabase Auth, Postgres DB, Shared Packages |
+| Postgres DB | Supabase Postgres 15 | Persistencia de routines, daily_items, daily_notes | — |
 | Supabase Auth | GoTrue (Supabase) | Auth email+password, JWT para RLS | Postgres DB |
-| Push Scheduler | Supabase Edge Functions (Deno) | Scheduler por item: dispara push a la hora configurada | Postgres DB, Expo Push Service |
-| Local Storage | AsyncStorage / SQLite (Expo) | Operación offline del día actual | Postgres DB (sync) |
+| Push Scheduler | Supabase Edge Functions (Deno) | Dispara push a la hora configurada — solo mobile | Postgres DB, Expo Push Service |
+| Local Storage | AsyncStorage / SQLite (Expo) | Operación offline del día actual — solo mobile | Postgres DB (sync) |
+| Shared Packages | TypeScript monorepo | Lógica de negocio y acceso a datos reutilizable | — |
 
 ## Notas de diseño
 
-- **RLS en todas las tablas**: cada query filtra automáticamente por `auth.uid()` — NFR-SEC-01.
-- **Offline-first**: el mobile escribe primero en Local Storage; sincroniza en background — NFR-AVAIL-02.
-- **Scheduler granularidad**: un job por item (no por bloque), se cancela si el item ya fue marcado antes de su hora — UC-05.
-- **Plan gratuito**: Supabase free (500 MB DB, 2 GB bandwidth, 500K Edge Function invocations/mes) + Expo Push (gratuito) — NFR-SCALE-01.
-- **Web (futuro)**: se agregará como un nuevo Container (Next.js en Vercel) que comparte el mismo Postgres DB y Auth.
+- **RLS en todas las tablas**: cada query filtra automáticamente por `auth.uid()` — aplica igual a mobile y web.
+- **Shared packages**: `packages/core` (lógica pura), `packages/database` (Supabase client), `packages/types`, `packages/validators` no tienen dependencias de React Native y se reutilizan sin cambios en `apps/web`.
+- **Offline-first solo en mobile**: la web opera conectada. No hay sync local en MVP web.
+- **Push solo en mobile**: el Push Scheduler solo envía tokens Expo (mobile). Web Push API fuera del MVP.
+- **Mismo backend**: mobile y web comparten el mismo Supabase project — mismo Postgres, mismo Auth, misma RLS.
+- **Styling independiente**: mobile usa NativeWind; web usa Tailwind CSS estándar (mismo sistema de tokens, distinta implementación).
+- **Plan gratuito**: Supabase free + Expo Push (gratuito) + Vercel Hobby (gratuito para apps Next.js).

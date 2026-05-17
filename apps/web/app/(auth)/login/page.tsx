@@ -4,7 +4,7 @@ export default function LoginPage() {
   return (
     <main
       className="min-h-screen flex items-center justify-center px-4"
-      style={{ background: "linear-gradient(160deg, #ede9fe 0%, #f0f4ff 40%, #f8fafc 100%)" }}
+      style={{ background: "linear-gradient(160deg, #e8f4ff 0%, #f0ebff 50%, #ffffff 100%)" }}
     >
       <div className="w-full max-w-sm">
         {/* Logo / brand */}
@@ -13,8 +13,8 @@ export default function LoginPage() {
             <span className="text-3xl">💊</span>
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-[#1e293b]">Mi Día</h1>
-            <p className="mt-0.5 text-sm text-[#64748b]">Tu checklist diario de salud</p>
+            <h1 className="text-2xl font-bold text-[#1e293b]">Trazadía</h1>
+            <p className="mt-0.5 text-sm text-[#64748b]">Tu bienestar, un día a la vez</p>
           </div>
         </div>
 

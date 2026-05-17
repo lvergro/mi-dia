@@ -5,18 +5,21 @@
 
 ```mermaid
 C4Context
-  Person(user, "Usuario", "Paciente Android que registra medicamentos y actividades diarias")
+  Person(user, "Usuario", "Paciente que registra medicamentos y actividades diarias — desde mobile o web")
 
   System_Boundary(s, "Mi Día") {
-    System(app, "Mi Día App", "App mobile (Expo/React Native) para gestión de adherencia a medicamentos y actividades")
+    System(mobile, "Mi Día Mobile", "App Android (Expo/React Native). Uso diario en dispositivo, con notificaciones push.")
+    System(web, "Mi Día Web", "App web (Next.js en Vercel). Acceso desde browser/desktop. Mismas 4 pantallas que mobile.")
   }
 
   System_Ext(supabase, "Supabase", "Auth, base de datos PostgreSQL y Edge Functions")
-  System_Ext(expo_push, "Expo Push Service", "Entrega de notificaciones push a dispositivos iOS/Android")
+  System_Ext(expo_push, "Expo Push Service", "Entrega de notificaciones push a dispositivos Android")
 
-  Rel(user, app, "Registra items, marca cumplimiento, consulta historial", "Interacción directa")
-  Rel(app, supabase, "Auth, lectura/escritura de datos", "HTTPS / Supabase SDK")
-  Rel(supabase, expo_push, "Envía recordatorios push", "HTTPS")
+  Rel(user, mobile, "Registra items, marca cumplimiento, consulta historial", "Interacción táctil")
+  Rel(user, web, "Registra items, marca cumplimiento, consulta historial", "Browser / HTTPS")
+  Rel(mobile, supabase, "Auth, lectura/escritura de datos", "HTTPS / Supabase SDK")
+  Rel(web, supabase, "Auth, lectura/escritura de datos", "HTTPS / Supabase SDK")
+  Rel(supabase, expo_push, "Envía recordatorios push (solo mobile)", "HTTPS")
   Rel(expo_push, user, "Entrega notificaciones push", "FCM (Android)")
 ```
 
@@ -24,12 +27,13 @@ C4Context
 
 | Nombre | Tipo | Descripción |
 |--------|------|-------------|
-| Usuario | Persona | Paciente que usa la app mobile para gestionar su adherencia |
-| Mi Día App | Sistema | App mobile Expo/React Native — el sistema principal |
+| Usuario | Persona | Paciente que gestiona su adherencia — puede usar mobile y/o web |
+| Mi Día Mobile | Sistema | App Android Expo/React Native — offline-first, con push |
+| Mi Día Web | Sistema | App web Next.js (Vercel) — mismas 4 pantallas, sin push en MVP |
 | Supabase | Sistema externo | Auth (email+password), Postgres DB con RLS, Edge Functions para scheduler de push |
-| Expo Push Service | Sistema externo | Intermediario para entrega de notificaciones push a iOS y Android (gratuito) |
+| Expo Push Service | Sistema externo | Entrega push a Android via FCM (solo aplica a mobile) |
 
 ## Fuera de alcance (Level 1)
-- Versión web (planificada para una fase posterior)
 - Administradores o usuarios secundarios (cuidadores)
 - Integración con farmacias, recetas médicas o sistemas de salud externos
+- Notificaciones push en web (Web Push API) — MVP web recibe push solo via mobile

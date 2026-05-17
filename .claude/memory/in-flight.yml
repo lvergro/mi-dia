@@ -27,3 +27,45 @@
 # LUI-95 completado — PR: https://github.com/lvergro/mi-dia/pull/29
 
 # LUI-96 completado — PR: https://github.com/lvergro/mi-dia/pull/31
+
+# LUI-97 completado — PR: https://github.com/lvergro/mi-dia/pull/32
+
+# LUI-123 completado — PR: https://github.com/lvergro/mi-dia/pull/33
+
+LUI-123-archived:
+  branch: feat/LUI-123-crear-app-web-nextjs
+  team_id: a86de6f8-f7b9-47c1-8a58-de974b88cf6a
+  issue_url: https://linear.app/lvergarar/issue/LUI-123/crear-app-web-en-monorepo-nextjs-15-vercel
+  phase: done
+  waves:
+    - name: Wave 1 — Scaffolding
+      tasks:
+        - { desc: "package.json, next.config.ts, tailwind.config.ts, postcss.config.mjs, tsconfig.json", done: false }
+    - name: Wave 2 — Supabase + capa de datos
+      tasks:
+        - { desc: "lib/supabase/client.ts + server.ts", done: false }
+        - { desc: "middleware.ts (auth refresh)", done: false }
+        - { desc: "lib/db/daily-items.ts + medications.ts + routines.ts", done: false }
+    - name: Wave 3 — UI base + Login
+      tasks:
+        - { desc: "components/ui/Button, Input, Card, Badge", done: false }
+        - { desc: "app/layout.tsx (root), app/page.tsx (redirect)", done: false }
+        - { desc: "components/auth/LoginForm.tsx", done: false }
+        - { desc: "app/(auth)/login/page.tsx", done: false }
+    - name: Wave 4 — Shell
+      tasks:
+        - { desc: "components/auth/AuthGuard.tsx", done: false }
+        - { desc: "components/nav/Sidebar.tsx", done: false }
+        - { desc: "app/(app)/layout.tsx", done: false }
+    - name: Wave 5 — Mi Día
+      tasks:
+        - { desc: "app/(app)/mi-dia/page.tsx (Server Component)", done: false }
+        - { desc: "components/checklist/MiDiaView, TimeBlock, ChecklistItem, StatusControl, NotSureWarning", done: false }
+    - name: Wave 6 — Medicamentos
+      tasks:
+        - { desc: "app/(app)/medicamentos/page.tsx (Server Component)", done: false }
+        - { desc: "components/medications/MedicationList, MedicationCard, MedicationForm", done: false }
+    - name: Wave 7 — Historial
+      tasks:
+        - { desc: "app/(app)/historial/page.tsx (Server Component)", done: false }
+        - { desc: "components/history/HistorialView, AdherenceBar", done: false }

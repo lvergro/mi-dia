@@ -2,11 +2,14 @@
 updated: 2026-05-04
 
 ## System Overview
-MVP mobile-first. Monorepo pnpm + Turborepo. App Expo (React Native) con Supabase como BaaS.
-Sin app web en MVP. Sin sincronización offline avanzada en MVP.
+Monorepo pnpm + Turborepo. Supabase como BaaS compartido.
+- `apps/mobile`: Android (Expo/React Native) — offline-first, push notifications.
+- `apps/web`: Browser (Next.js 15 / App Router en Vercel) — mismas 4 pantallas, sin offline ni push en MVP.
+Los `packages/` son compartidos por ambas apps.
 
 ## Apps
-- `apps/mobile`: Expo Router v4, React Native. Interfaz de uso diario en Android.
+- `apps/mobile`: Expo Router v4, React Native. Interfaz de uso diario en Android. Offline-first.
+- `apps/web`: Next.js 15 App Router, desplegado en Vercel. Login, Mi Día, Medicamentos, Historial.
 
 ## Packages (dependency order: bottom → top)
 ```
@@ -15,6 +18,7 @@ packages/validators  ← depende de: types
 packages/core        ← depende de: types, validators
 packages/database    ← depende de: types (+ Supabase client)
 apps/mobile          ← depende de: core, database, validators, types
+apps/web             ← depende de: core, database, validators, types
 ```
 
 ## Dependency Rules (ENFORCED)
@@ -82,8 +86,9 @@ El root layout de Expo Router actúa como auth guard.
 - Types: `packages/types/src/{domain}.ts`
 
 ## Styling
-NativeWind (Tailwind para React Native). Tokens de color definidos en tailwind.config.js del mobile app.
-Diseño: pocos colores, botones grandes, baja carga cognitiva.
+- Mobile: NativeWind (Tailwind para React Native). Tokens de color en tailwind.config.js de mobile.
+- Web: Tailwind CSS estándar. Mismo sistema de tokens, distinta implementación.
+Diseño: pocos colores, baja carga cognitiva.
 
 ## State Management
 - Server state: TanStack Query (`@tanstack/react-query`)
