@@ -20,7 +20,13 @@ const MOOD_OPTIONS = [
 
 function getNextPending(checklist: GroupedChecklist): ItemWithStatus | null {
   const allItems = [...checklist["mañana"], ...checklist["tarde"], ...checklist["noche"]];
-  return allItems.find(i => i.status === "pending") ?? null;
+  const pending = allItems
+    .filter(i => i.status === "pending")
+    .sort((a, b) => a.specific_time.localeCompare(b.specific_time));
+  if (pending.length === 0) return null;
+  const now = new Date();
+  const nowStr = `${now.getHours().toString().padStart(2,"0")}:${now.getMinutes().toString().padStart(2,"0")}:00`;
+  return pending.find(i => i.specific_time >= nowStr) ?? pending[pending.length - 1];
 }
 
 function formatNoteTime(iso: string) {
