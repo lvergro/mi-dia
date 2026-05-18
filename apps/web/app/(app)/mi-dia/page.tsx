@@ -41,7 +41,7 @@ export default async function MiDiaPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <PageHeader
-        title="Mi Día"
+        title="Trazadía"
         subtitle={dateLabel}
         right={
           <div className="flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white px-4 py-2.5 shadow-subtle">

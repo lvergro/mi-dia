@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Mi Día",
-  description: "Tu checklist diario de medicamentos y actividades",
+  title: "Trazadía",
+  description: "Un día a la vez",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
