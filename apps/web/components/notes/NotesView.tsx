@@ -7,6 +7,7 @@ import {
   createNote,
   updateNote,
   deleteNote,
+  upsertMoodNote,
 } from "@/lib/db/notes";
 import { upsertMood } from "@/lib/db/moods";
 
@@ -207,8 +208,15 @@ export function NotesView({ initialNotes, initialMood }: Props) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setMoodSaving(true);
     debounceRef.current = setTimeout(async () => {
-      try { await upsertMood({ date: today, mood: v, note: null }); }
-      finally { setMoodSaving(false); }
+      const opt = MOOD_OPTIONS.find(m => m.value === v)!;
+      try {
+        await upsertMood({ date: today, mood: v, note: null });
+        const moodNote = await upsertMoodNote(today, v, opt.emoji, opt.label);
+        setNotes(prev => {
+          const without = prev.filter(n => !n.content.startsWith("Estado de ánimo:") || n.date !== today);
+          return [moodNote, ...without];
+        });
+      } finally { setMoodSaving(false); }
     }, 500);
   }
 

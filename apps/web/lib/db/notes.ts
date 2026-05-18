@@ -58,3 +58,43 @@ export async function deleteNote(id: string): Promise<void> {
   const { error } = await supabase.from("daily_notes").delete().eq("id", id);
   if (error) throw error;
 }
+
+export async function upsertMoodNote(
+  date: string,
+  mood: MoodValue,
+  emoji: string,
+  label: string,
+): Promise<DailyNote> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const content = `Estado de ánimo: ${emoji} ${label}`;
+
+  const { data: existing } = await supabase
+    .from("daily_notes")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("date", date)
+    .like("content", "Estado de ánimo:%")
+    .maybeSingle();
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from("daily_notes")
+      .update({ content, mood })
+      .eq("id", existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as DailyNote;
+  }
+
+  const { data, error } = await supabase
+    .from("daily_notes")
+    .insert({ content, mood, date, user_id: user.id })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as DailyNote;
+}

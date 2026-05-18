@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { MoodValue } from "@mi-dia/types";
 import { upsertMood } from "@/lib/db/moods";
+import { upsertMoodNote } from "@/lib/db/notes";
 
 const MOODS = [
   { value: 1 as MoodValue, emoji: "😢", label: "Muy mal",   color: "#ef4444", bg: "#fef2f2" },
@@ -33,8 +34,12 @@ export function MoodSelectorCard({ initialMood }: Props) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setSaving(true);
     debounceRef.current = setTimeout(async () => {
-      try { await upsertMood({ date: getTodayLocal(), mood: v, note: null }); }
-      finally { setSaving(false); }
+      const today = getTodayLocal();
+      const opt = MOODS.find(m => m.value === v)!;
+      try {
+        await upsertMood({ date: today, mood: v, note: null });
+        await upsertMoodNote(today, v, opt.emoji, opt.label);
+      } finally { setSaving(false); }
     }, 500);
   }
 
