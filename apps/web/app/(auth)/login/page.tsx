@@ -10,7 +10,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo / brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <Image src="/logo.png" alt="Trazadía" width={80} height={80} className="rounded-[20px] shadow-card" priority />
+          <Image src="/logo.png" alt="Trazadía" width={120} height={120} className="rounded-[20px] shadow-card" priority />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-[#1e293b]">Trazadía</h1>
             <p className="mt-0.5 text-sm text-[#64748b]">Un día a la vez</p>
