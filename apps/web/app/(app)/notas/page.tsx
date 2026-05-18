@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { NotesView } from "@/components/notes/NotesView";
+import { PageHeader } from "@/components/ui/PageHeader";
 import type { DailyNote, DailyMood } from "@mi-dia/types";
 
 function getTodayLocal(): string {
@@ -32,9 +33,12 @@ export default async function NotasPage() {
   ]);
 
   return (
-    <NotesView
-      initialNotes={(notesRes.data ?? []) as DailyNote[]}
-      initialMood={(moodRes.data ?? null) as DailyMood | null}
-    />
+    <div className="max-w-3xl mx-auto">
+      <PageHeader title="Notas" subtitle="Tu diario personal" />
+      <NotesView
+        initialNotes={(notesRes.data ?? []) as DailyNote[]}
+        initialMood={(moodRes.data ?? null) as DailyMood | null}
+      />
+    </div>
   );
 }

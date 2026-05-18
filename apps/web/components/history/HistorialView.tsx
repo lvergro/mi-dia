@@ -1,22 +1,31 @@
+"use client";
 import type { DayHistory } from "@mi-dia/core";
-import { AdherenceBar } from "./AdherenceBar";
+import { HistoryStatCards } from "./HistoryStatCards";
+import { DayHistoryCard } from "./DayHistoryCard";
 
-export function HistorialView({ history }: { history: DayHistory[] }) {
+interface Props {
+  history: DayHistory[];
+}
+
+export function HistorialView({ history }: Props) {
   if (history.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <p className="text-4xl mb-3">📊</p>
-        <p className="font-medium text-gray-900">Sin historial todavía</p>
-        <p className="text-sm text-muted mt-1">Comienza a marcar tus ítems diarios para ver tu adherencia</p>
+      <div className="flex flex-col items-center justify-center py-20 text-center gap-2">
+        <span className="text-4xl">📊</span>
+        <p className="font-semibold text-slate-800">Sin historial todavía</p>
+        <p className="text-sm text-slate-400">Comienza a marcar tus ítems diarios para ver tu adherencia</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {history.map(day => (
-        <AdherenceBar key={day.date} date={day.date} pct={day.pct} done={day.done} total={day.total} />
-      ))}
+    <div>
+      <HistoryStatCards history={history} />
+      <div className="flex flex-col gap-2.5">
+        {history.map(day => (
+          <DayHistoryCard key={day.date} day={day} />
+        ))}
+      </div>
     </div>
   );
 }

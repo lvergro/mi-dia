@@ -119,9 +119,9 @@ function NoteRow({
   return (
     <div
       className="flex rounded-2xl border overflow-hidden shadow-subtle mt-2 transition-colors"
-      style={{ borderColor: editing ? "#4f46e5" : "#e7eaf3", backgroundColor: "#ffffff" }}
+      style={{ borderColor: editing ? "#4f46e5" : "#e2e8f0", backgroundColor: "#ffffff" }}
     >
-      <div className="w-1 shrink-0" style={{ backgroundColor: moodOpt?.color ?? "#e5e7eb" }} />
+      <div className="w-1 shrink-0" style={{ backgroundColor: moodOpt?.color ?? "#e2e8f0" }} />
       <div className="flex-1 p-4">
         {editing ? (
           <div className="flex flex-col gap-3">
@@ -130,19 +130,19 @@ function NoteRow({
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
               rows={3}
-              className="w-full resize-none rounded-xl border border-primary px-3 py-2 text-sm text-[#1e293b] outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full resize-none rounded-xl border border-indigo-400 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-indigo-200"
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => { setEditing(false); setEditText(note.content); }}
-                className="rounded-xl border border-[#e7eaf3] px-3 py-1.5 text-[13px] font-semibold text-[#64748b] hover:bg-[#f8fafc]"
+                className="rounded-xl border border-slate-200 px-3 py-1.5 text-[13px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !editText.trim() || editText.trim() === note.content}
-                className="flex items-center gap-1 rounded-xl bg-primary px-3 py-1.5 text-[13px] font-semibold text-white disabled:opacity-50"
+                className="flex items-center gap-1 rounded-xl bg-indigo-600 px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
               >
                 {saving && <Loader2 className="size-3.5 animate-spin" />}
                 Guardar
@@ -152,7 +152,7 @@ function NoteRow({
         ) : (
           <>
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-[11px] font-semibold text-[#94a3b8]">{formatNoteTime(note.created_at)}</span>
+              <span className="text-[11px] font-semibold text-slate-400">{formatNoteTime(note.created_at)}</span>
               {moodOpt && (
                 <span
                   className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -164,19 +164,19 @@ function NoteRow({
               <div className="flex-1" />
               <button
                 onClick={() => setEditing(true)}
-                className="rounded-lg p-1.5 text-[#94a3b8] hover:text-primary hover:bg-primary/5 transition-colors"
+                className="rounded-lg p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
               >
                 <Pencil className="size-3.5" strokeWidth={1.8} />
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="rounded-lg p-1.5 text-[#94a3b8] hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40"
+                className="rounded-lg p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40"
               >
                 <Trash2 className="size-3.5" strokeWidth={1.8} />
               </button>
             </div>
-            <p className="text-sm text-[#1e293b] leading-relaxed whitespace-pre-wrap">{note.content}</p>
+            <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{note.content}</p>
           </>
         )}
       </div>
@@ -244,18 +244,18 @@ export function NotesView({ initialNotes, initialMood }: Props) {
   ];
 
   return (
-    <div className="flex flex-col gap-4 max-w-2xl mx-auto py-6 px-4">
+    <div className="flex flex-col gap-4">
       {/* Mood card */}
       <MoodCard mood={mood} onMoodChange={handleMoodChange} isSaving={moodSaving} />
 
       {/* New note input */}
-      <div className="rounded-2xl border border-card-border bg-white p-4 shadow-card">
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-subtle">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[15px] font-bold text-[#1e293b]">Nueva nota</span>
+          <span className="text-[15px] font-bold text-slate-900">Nueva nota</span>
           <button
             onClick={handleAdd}
             disabled={adding || !text.trim()}
-            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50 transition-opacity"
+            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-[13px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
             {adding && <Loader2 className="size-3.5 animate-spin" />}
             Guardar
@@ -267,13 +267,13 @@ export function NotesView({ initialNotes, initialMood }: Props) {
           placeholder="¿Qué tienes en mente hoy?"
           rows={3}
           onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAdd(); }}
-          className="w-full resize-none rounded-xl border border-[#e8eaf0] bg-[#fafafe] px-3 py-2.5 text-sm text-[#1e293b] placeholder:text-[#b0b8c8] outline-none focus:border-primary transition-colors"
+          className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-indigo-400 focus:bg-white transition-colors"
         />
-        <p className="mt-1.5 text-[11px] text-[#b0b8c8]">⌘+Enter para guardar</p>
+        <p className="mt-1.5 text-[11px] text-slate-400">⌘+Enter para guardar</p>
       </div>
 
-      {/* Period filter */}
-      <div className="flex rounded-2xl bg-[#f1f5f9] p-1">
+      {/* Period filter / Tabs */}
+      <div className="flex rounded-2xl bg-slate-100 p-1">
         {TABS.map((tab) => {
           const active = period === tab.key;
           return (
@@ -281,7 +281,7 @@ export function NotesView({ initialNotes, initialMood }: Props) {
               key={tab.key}
               onClick={() => setPeriod(tab.key)}
               className={`flex-1 rounded-xl py-2 text-[13px] font-medium transition-colors ${
-                active ? "bg-white text-[#1e293b] shadow-subtle font-semibold" : "text-[#64748b]"
+                active ? "bg-white text-slate-900 shadow-subtle font-semibold" : "text-slate-500"
               }`}
             >
               {tab.label}
@@ -294,7 +294,7 @@ export function NotesView({ initialNotes, initialMood }: Props) {
       {groups.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-12 text-center">
           <span className="text-4xl">📝</span>
-          <p className="text-sm text-[#94a3b8]">
+          <p className="text-sm text-slate-400">
             {period === "today" ? "No hay notas hoy" : period === "week" ? "No hay notas en los últimos 7 días" : "Tus notas aparecerán aquí"}
           </p>
         </div>
@@ -307,15 +307,15 @@ export function NotesView({ initialNotes, initialMood }: Props) {
             <div key={date}>
               <button
                 onClick={() => toggleCollapse(date)}
-                className="w-full flex items-center justify-between rounded-2xl border border-card-border bg-white px-4 py-3.5 shadow-subtle hover:bg-[#f8fafc] transition-colors"
+                className="w-full flex items-center justify-between rounded-2xl border border-slate-200/70 bg-white px-4 py-3.5 shadow-subtle hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="text-[15px] font-bold text-[#1e293b]">{relativeDayLabel(date)}</span>
+                  <span className="text-[15px] font-bold text-slate-900">{relativeDayLabel(date)}</span>
                   {moodOpt && <span className="text-base">{moodOpt.emoji}</span>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] text-[#94a3b8]">{items.length} {items.length === 1 ? "nota" : "notas"}</span>
-                  {isCollapsed ? <ChevronDown className="size-4 text-[#94a3b8]" /> : <ChevronUp className="size-4 text-[#94a3b8]" />}
+                  <span className="text-[12px] text-slate-400">{items.length} {items.length === 1 ? "nota" : "notas"}</span>
+                  {isCollapsed ? <ChevronDown className="size-4 text-slate-400" /> : <ChevronUp className="size-4 text-slate-400" />}
                 </div>
               </button>
               {!isCollapsed && items.map((note) => (
