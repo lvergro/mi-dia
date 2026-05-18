@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { DangerZone } from "@/components/account/DangerZone";
 import { UserCircle, Mail, Calendar } from "lucide-react";
 
 export default async function MiCuentaPage() {
@@ -63,6 +64,8 @@ export default async function MiCuentaPage() {
             </div>
           </div>
         </div>
+
+        <DangerZone />
       </div>
     </div>
   );
