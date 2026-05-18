@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export default function LoginPage() {
@@ -9,12 +10,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo / brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex size-16 items-center justify-center rounded-[20px] bg-primary shadow-card">
-            <span className="text-3xl">💊</span>
-          </div>
+          <Image src="/logo.png" alt="Trazadía" width={80} height={80} className="rounded-[20px] shadow-card" priority />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-[#1e293b]">Trazadía</h1>
-            <p className="mt-0.5 text-sm text-[#64748b]">Tu bienestar, un día a la vez</p>
+            <p className="mt-0.5 text-sm text-[#64748b]">Un día a la vez</p>
           </div>
         </div>
 

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { CalendarCheck, Pill, BarChart2, NotebookPen, UserCircle, LogOut, TrendingUp } from "lucide-react";
@@ -35,9 +36,7 @@ export function Sidebar({ userEmail, weeklyPct }: SidebarProps) {
     <aside className="hidden md:flex h-full w-60 shrink-0 flex-col border-r border-slate-200/70 bg-white px-3 py-5">
       {/* Brand */}
       <div className="mb-6 flex items-center gap-2.5 px-2">
-        <div className="flex size-8 items-center justify-center rounded-xl bg-indigo-600 shadow-sm">
-          <span className="text-sm">💊</span>
-        </div>
+        <Image src="/logo.png" alt="Trazadía" width={32} height={32} className="rounded-xl shadow-sm" />
         <span className="text-[15px] font-bold tracking-tight text-slate-900">Trazadía</span>
       </div>
 
